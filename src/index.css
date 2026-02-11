@@ -1,0 +1,114 @@
+@import "tailwindcss";
+
+/* Custom theme for Rooted - Warm & Earthy */
+@theme {
+  --color-cream: #FDF6E9;
+  --color-cream-dark: #F5EBD7;
+  --color-sage: #87A878;
+  --color-sage-light: #A8C49A;
+  --color-sage-dark: #6B8A5E;
+  --color-terracotta: #C67D5E;
+  --color-terracotta-light: #D9A088;
+  --color-terracotta-dark: #A65D3F;
+  --color-earth: #5D4E42;
+  --color-earth-light: #7A6B5E;
+  --color-sand: #E8DCC8;
+}
+
+/* Mobile-first base styles */
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh; /* Dynamic viewport height for mobile */
+  background-color: var(--color-cream);
+  color: var(--color-earth);
+  /* Safe area padding for notched phones */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+#root {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Touch-friendly improvements */
+button, a, [role="button"] {
+  min-height: 44px; /* Apple's recommended touch target */
+  touch-action: manipulation; /* Faster tap response */
+}
+
+/* Disable pull-to-refresh on mobile */
+html, body {
+  overscroll-behavior-y: contain;
+}
+
+/* Smooth scrolling */
+* {
+  scroll-behavior: smooth;
+}
+
+/* Hide scrollbar on mobile but keep functionality */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Bottom navigation safe area */
+.safe-bottom {
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+}
+
+/* Status bar area */
+.safe-top {
+  padding-top: max(16px, env(safe-area-inset-top));
+}
+
+/* Full height accounting for bottom nav */
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Mobile-optimized spacing scale */
+@media (max-width: 430px) {
+  .mobile-compact {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+/* Larger tap targets on touch devices */
+@media (hover: none) and (pointer: coarse) {
+  button, .btn {
+    min-height: 48px;
+  }
+}
+
+/* Prevent text selection on UI elements */
+.no-select {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* PWA standalone mode adjustments */
+@media all and (display-mode: standalone) {
+  body {
+    /* Extra top padding when in standalone mode */
+    padding-top: max(20px, env(safe-area-inset-top));
+  }
+}

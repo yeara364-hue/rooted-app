@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+  <rect width="192" height="192" fill="#FDF6E9"/>
+  <defs>
+    <radialGradient id="droplet-gradient" cx="30%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#B5D4E8"/>
+      <stop offset="100%" stop-color="#8AAEC4"/>
+    </radialGradient>
+    <radialGradient id="highlight" cx="35%" cy="25%" r="30%">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.7)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </radialGradient>
+  </defs>
+  <!-- Water droplet (Numa) -->
+  <path
+    d="M96 32
+       C96 32, 144 80, 144 112
+       C144 140, 122 160, 96 160
+       C70 160, 48 140, 48 112
+       C48 80, 96 32, 96 32Z"
+    fill="url(#droplet-gradient)"
+  />
+  <!-- Highlight -->
+  <ellipse cx="82" cy="85" rx="14" ry="22" fill="url(#highlight)" opacity="0.8"/>
+  <!-- Reflection dot -->
+  <circle cx="78" cy="72" r="6" fill="rgba(255,255,255,0.9)"/>
+</svg>
