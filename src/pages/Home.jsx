@@ -958,56 +958,127 @@ export default function Home() {
     }
   }
 
-  // Full-size card renderer for carousel
+  // Full-size card renderer for grid
   const renderCard = (item) => {
     switch (item.type) {
-      case 'breathing': return <BreathingCard key={item.id} item={item} mood={currentMood} onTrackingUpdate={refreshStats} />
-      case 'micro': return <MicroActionCard key={item.id} item={item} mood={currentMood} onTrackingUpdate={refreshStats} />
-      case 'journal': return <JournalCard key={item.id} item={item} mood={currentMood} onTrackingUpdate={refreshStats} />
-      case 'info': return <InfoCard key={item.id} item={item} mood={currentMood} />
-      case 'recipe': return <RecipeCard key={item.id} item={item} mood={currentMood} onOpen={() => { setSelectedRecipe(item); setRecipeModalOpen(true) }} />
+      case 'breathing': return (
+        <div key={item.id} className="bg-white rounded-2xl border border-sand hover:border-sage hover:shadow-lg transition-all hover:scale-[1.02] overflow-hidden">
+          <div className="p-4">
+            <div className="w-12 h-12 rounded-full bg-sage/20 flex items-center justify-center mb-3">
+              <Wind className="w-6 h-6 text-sage" />
+            </div>
+            <h3 className="text-earth font-medium text-sm mb-1">{item.title}</h3>
+            <p className="text-earth-light text-xs mb-3">{item.subtitle}</p>
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-xs text-earth-light flex items-center gap-1">
+                <Timer className="w-3 h-3" /> {item.duration}s
+              </span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-sage/10 text-sage">Breathing</span>
+            </div>
+            <CompactBreathingCard item={item} onStart={() => {}} onTrackingUpdate={refreshStats} />
+          </div>
+        </div>
+      )
+      case 'micro': return (
+        <div key={item.id} className="bg-white rounded-2xl border border-sand hover:border-sage hover:shadow-lg transition-all hover:scale-[1.02] overflow-hidden">
+          <div className="p-4">
+            <div className="w-12 h-12 rounded-full bg-terracotta/20 flex items-center justify-center mb-3">
+              <Zap className="w-6 h-6 text-terracotta" />
+            </div>
+            <h3 className="text-earth font-medium text-sm mb-1">{item.title}</h3>
+            <p className="text-earth-light text-xs line-clamp-2 mb-3">{item.instruction}</p>
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-xs text-earth-light flex items-center gap-1">
+                <Timer className="w-3 h-3" /> {item.duration}
+              </span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-terracotta/10 text-terracotta">Micro Action</span>
+            </div>
+            <CompactMicroCard item={item} onTrackingUpdate={refreshStats} />
+          </div>
+        </div>
+      )
+      case 'journal': return (
+        <div key={item.id} className="bg-white rounded-2xl border border-sand hover:border-sage hover:shadow-lg transition-all hover:scale-[1.02] overflow-hidden">
+          <div className="p-4">
+            <div className="w-12 h-12 rounded-full bg-earth/20 flex items-center justify-center mb-3">
+              <PenLine className="w-6 h-6 text-earth" />
+            </div>
+            <h3 className="text-earth font-medium text-sm mb-1">{item.title}</h3>
+            <p className="text-earth-light text-xs italic line-clamp-2 mb-3">"{item.prompt}"</p>
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-earth/10 text-earth">Journal</span>
+            </div>
+            <CompactJournalCard item={item} onTrackingUpdate={refreshStats} />
+          </div>
+        </div>
+      )
+      case 'info': return null
+      case 'recipe': return (
+        <div key={item.id} className="bg-white rounded-2xl border border-sand hover:border-sage hover:shadow-lg transition-all hover:scale-[1.02] overflow-hidden">
+          <div className="p-4">
+            <div className="w-12 h-12 rounded-full bg-terracotta/20 flex items-center justify-center mb-3">
+              <UtensilsCrossed className="w-6 h-6 text-terracotta" />
+            </div>
+            <h3 className="text-earth font-medium text-sm mb-1">{item.title}</h3>
+            <p className="text-earth-light text-xs line-clamp-1 mb-3">{item.subtitle}</p>
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-terracotta/10 text-terracotta">Recipe</span>
+            </div>
+            <button onClick={() => { setSelectedRecipe(item); setRecipeModalOpen(true) }} className="w-full py-2 px-3 text-xs font-medium rounded-lg bg-terracotta/10 text-terracotta hover:bg-terracotta/20 transition-colors">
+              View Recipe
+            </button>
+          </div>
+        </div>
+      )
       case 'media': default:
         return (
-          <button key={item.id} onClick={() => handleRecommendationClick(item)} className="flex-shrink-0 w-44 bg-cream-dark rounded-2xl border-2 border-sand hover:border-sage transition-colors text-left overflow-hidden">
-            <div className={`h-20 flex items-center justify-center ${getCategoryColor(item.category)}/20`}>
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${getCategoryColor(item.category)}`}>{getCategoryIcon(item.category)}</div>
-            </div>
-            <div className="p-3">
-              <p className="text-earth text-sm font-medium line-clamp-1">{item.title}</p>
-              <p className="text-earth-light text-xs mt-1 line-clamp-1">{item.subtitle}</p>
-              <div className="flex items-center justify-between mt-2">
-                <span className="text-xs text-earth-light">{item.duration}</span>
-                <span className={`text-xs px-2 py-0.5 rounded-full ${item.platform === 'youtube' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>{item.platform === 'youtube' ? 'YouTube' : 'Spotify'}</span>
+          <div key={item.id} className="bg-white rounded-2xl border border-sand hover:border-sage hover:shadow-lg transition-all hover:scale-[1.02] overflow-hidden">
+            <div className="p-4">
+              <div className={`w-12 h-12 rounded-full ${getCategoryColor(item.category)} flex items-center justify-center mb-3`}>
+                {getCategoryIcon(item.category)}
               </div>
-              <p className="text-[10px] text-earth-light/60 mt-2">Because: {currentMood} + {item.reason}</p>
+              <h3 className="text-earth font-medium text-sm line-clamp-1 mb-1">{item.title}</h3>
+              <p className="text-earth-light text-xs line-clamp-1 mb-3">{item.subtitle}</p>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-xs text-earth-light flex items-center gap-1">
+                  <Clock className="w-3 h-3" /> {item.duration}
+                </span>
+                <span className={`text-[10px] px-2 py-0.5 rounded-full ${item.platform === 'youtube' ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'}`}>
+                  {item.platform === 'youtube' ? 'YouTube' : 'Spotify'}
+                </span>
+              </div>
+              <button onClick={() => handleRecommendationClick(item)} className={`w-full py-2 px-3 text-xs font-medium rounded-lg transition-colors ${item.platform === 'youtube' ? 'bg-red-100 text-red-600 hover:bg-red-200' : 'bg-green-100 text-green-600 hover:bg-green-200'}`}>
+                {item.platform === 'youtube' ? 'Play Video' : 'Listen Now'}
+              </button>
             </div>
-          </button>
+          </div>
         )
     }
   }
 
   return (
     <div className="min-h-screen bg-cream flex flex-col pb-20">
-      {/* Header */}
-      <div className="p-6 pb-4">
-        <p className="text-earth-light text-sm">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
-        <h1 className="text-2xl font-semibold text-earth mt-1">{getGreeting()}, {user?.name}</h1>
-        {insights.streakDays >= 2 && (
-          <div className="inline-flex items-center gap-1.5 mt-3 bg-terracotta/10 text-terracotta px-3 py-1.5 rounded-full">
-            <Flame className="w-4 h-4" /><span className="text-sm font-medium">{insights.streakDays} day streak!</span>
-          </div>
-        )}
-      </div>
+      <div className="max-w-5xl mx-auto w-full px-4 md:px-8 py-6 space-y-6">
+        {/* Header */}
+        <div>
+          <p className="text-earth-light text-sm">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+          <h1 className="text-3xl font-semibold text-earth mt-1">{getGreeting()}, {user?.name}</h1>
+          {insights.streakDays >= 2 && (
+            <div className="inline-flex items-center gap-1.5 mt-2 bg-terracotta/10 text-terracotta px-3 py-1.5 rounded-full">
+              <Flame className="w-4 h-4" /><span className="text-sm font-medium">{insights.streakDays} day streak!</span>
+            </div>
+          )}
+        </div>
 
-      {/* Numa Avatar */}
-      <div className="flex justify-center py-4">
-        <NumaAvatar mood={currentMood} state={numaState} size={100} />
-      </div>
+        {/* Numa Avatar */}
+        <div className="flex justify-center">
+          <NumaAvatar mood={currentMood} state={numaState} size={80} />
+        </div>
 
-      {/* Numa's Enhanced Reply */}
-      {(isThinking || showReply) && (
-        <div className="px-6 mb-4">
-          <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-sage/20 shadow-sm">
+        {/* Numa's Enhanced Reply */}
+        {(isThinking || showReply) && (
+          <div>
+            <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-sage/20 shadow-sm">
             {isThinking ? (
               <div className="flex items-center gap-2 text-earth-light"><Loader2 className="w-4 h-4 animate-spin" /><span className="text-sm">Numa is thinking...</span></div>
             ) : numaReplyData && (
@@ -1031,73 +1102,72 @@ export default function Home() {
                 )}
               </div>
             )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Top Picks Section - Compact, scannable */}
-      {showTopPicks && (
-        <div ref={topPicksRef} className="px-6 py-3 animate-fadeSlideUp">
-          <div className="flex items-center gap-1.5 mb-2">
-            <Star className="w-4 h-4 text-sage/70" />
-            <h2 className="text-sm font-medium text-earth-light">Top picks for you</h2>
+        {/* Top Picks Section - Compact, scannable */}
+        {showTopPicks && (
+          <div ref={topPicksRef} className="animate-fadeSlideUp">
+            <div className="flex items-center gap-1.5 mb-2">
+              <Star className="w-4 h-4 text-sage/70" />
+              <h2 className="text-sm font-medium text-earth-light">Top picks for you</h2>
+            </div>
+            <div className="space-y-2">
+              {topPicks.map(item => renderCompactCard(item))}
+            </div>
           </div>
-          <div className="space-y-2">
-            {topPicks.map(item => renderCompactCard(item))}
-          </div>
-        </div>
-      )}
+        )}
 
-      {/* Check-in Section */}
-      <div className="px-6 py-4">
-        <h2 className="text-sm font-medium text-earth-light mb-3">How are you feeling?</h2>
-        <div className="flex flex-wrap gap-2 mb-4">
-          {moodOptions.map((mood) => (
-            <button key={mood.id} onClick={() => handleMoodSelect(mood.id)} className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-sm transition-all ${selectedMood === mood.id ? 'bg-sage text-cream shadow-md scale-105' : 'bg-cream-dark border border-sand hover:border-sage text-earth'}`}>
-              <span>{mood.emoji}</span><span>{mood.label}</span>
-            </button>
-          ))}
-        </div>
-        <div className="flex gap-2">
-          <input type="text" value={checkInText} onChange={(e) => setCheckInText(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleCheckInSubmit()} placeholder="Tell Numa how you're feeling..." className="flex-1 bg-cream-dark border border-sand rounded-xl px-4 py-3 text-earth placeholder:text-earth-light/50 focus:outline-none focus:border-sage transition-colors" />
-          <button onClick={handleCheckInSubmit} disabled={isThinking || (!checkInText.trim() && !selectedMood)} className="w-12 h-12 bg-sage hover:bg-sage-dark disabled:bg-sand disabled:cursor-not-allowed rounded-xl flex items-center justify-center transition-colors">
-            {isThinking ? <Loader2 className="w-5 h-5 text-cream animate-spin" /> : <Send className="w-5 h-5 text-cream" />}
-          </button>
-        </div>
-        {detectedMood && showReply && <p className="text-xs text-earth-light mt-2">Detected: <span className="font-medium capitalize">{detectedMood}</span> {getMoodEmoji(detectedMood)}</p>}
-      </div>
-
-      {/* More Ideas / Recommendations */}
-      <div className="px-6 py-4">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-medium text-earth">{showTopPicks ? 'More ideas' : 'Recommended for You'}</h2>
-          <span className="text-xs bg-sage/10 text-sage px-2 py-1 rounded-full capitalize">{getMoodEmoji(currentMood)} {currentMood}</span>
-        </div>
-        <div className="flex gap-3 overflow-x-auto pb-2 -mx-6 px-6 scrollbar-hide">
-          {(showTopPicks ? moreOptions : recommendations).map(item => renderCard(item))}
-        </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="px-6 py-4">
-        <h2 className="text-sm font-medium text-earth-light mb-3">Quick Actions</h2>
-        <div className="grid grid-cols-3 gap-3">
-          {quickActions.map((action) => {
-            const Icon = action.icon
-            return (
-              <button key={action.id} onClick={() => handleQuickAction(action.id)} className="flex flex-col items-center p-4 bg-cream-dark rounded-2xl border border-sand hover:border-sage transition-colors">
-                <div className={`w-12 h-12 ${action.color} rounded-full flex items-center justify-center mb-2`}><Icon className="w-6 h-6 text-cream" /></div>
-                <span className="text-earth text-sm font-medium">{action.label}</span>
+        {/* Check-in Section */}
+        <div>
+          <h2 className="text-sm font-medium text-earth-light mb-3">How are you feeling?</h2>
+          <div className="flex flex-wrap gap-2 mb-4">
+            {moodOptions.map((mood) => (
+              <button key={mood.id} onClick={() => handleMoodSelect(mood.id)} className={`flex items-center gap-1.5 px-4 py-2 text-sm rounded-full transition-all ${selectedMood === mood.id ? 'bg-sage text-cream shadow-md scale-105' : 'bg-cream-dark border border-sand hover:border-sage text-earth'}`}>
+                <span>{mood.emoji}</span><span>{mood.label}</span>
               </button>
-            )
-          })}
+            ))}
+          </div>
+          <div className="flex gap-3">
+            <input type="text" value={checkInText} onChange={(e) => setCheckInText(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleCheckInSubmit()} placeholder="Tell Numa how you're feeling..." className="flex-1 h-12 bg-cream-dark border border-sand rounded-xl px-4 text-earth placeholder:text-earth-light/50 focus:outline-none focus:border-sage transition-colors" />
+            <button onClick={handleCheckInSubmit} disabled={isThinking || (!checkInText.trim() && !selectedMood)} className="h-12 w-12 bg-sage hover:bg-sage-dark disabled:bg-sand disabled:cursor-not-allowed rounded-xl flex items-center justify-center transition-colors flex-shrink-0">
+              {isThinking ? <Loader2 className="w-5 h-5 text-cream animate-spin" /> : <Send className="w-5 h-5 text-cream" />}
+            </button>
+          </div>
+          {detectedMood && showReply && <p className="text-xs text-earth-light mt-2">Detected: <span className="font-medium capitalize">{detectedMood}</span> {getMoodEmoji(detectedMood)}</p>}
         </div>
-      </div>
 
-      {/* Today's Progress Stats */}
-      <div className="px-6 py-4">
-        <h2 className="text-sm font-medium text-earth-light mb-3">Today's Progress</h2>
-        <div className="grid grid-cols-3 gap-3">
+        {/* Recommended for You */}
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-medium text-earth">Recommended for You <span className="text-xs bg-sage/10 text-sage px-2 py-1 rounded-full capitalize ml-2">{getMoodEmoji(currentMood)} {currentMood}</span></h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {(showTopPicks ? moreOptions : recommendations).map(item => renderCard(item))}
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div>
+          <h2 className="text-sm font-medium text-earth-light mb-3">Quick Actions</h2>
+          <div className="grid grid-cols-3 gap-3">
+            {quickActions.map((action) => {
+              const Icon = action.icon
+              return (
+                <button key={action.id} onClick={() => handleQuickAction(action.id)} className="flex flex-col items-center p-4 bg-cream-dark rounded-2xl border border-sand hover:border-sage transition-colors">
+                  <div className={`w-12 h-12 ${action.color} rounded-full flex items-center justify-center mb-2`}><Icon className="w-6 h-6 text-cream" /></div>
+                  <span className="text-earth text-sm font-medium">{action.label}</span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Today's Progress Stats */}
+        <div>
+          <h2 className="text-sm font-medium text-earth-light mb-3">Today's Progress</h2>
+          <div className="grid grid-cols-3 gap-3">
           <div className="bg-cream-dark rounded-2xl p-4 border border-sand text-center">
             <Award className="w-5 h-5 text-sage mx-auto mb-2" />
             <p className="text-2xl font-semibold text-earth">{trackingStats.completedToday}</p>
@@ -1118,12 +1188,12 @@ export default function Home() {
             <p className="text-2xl font-semibold text-earth">{trackingStats.streak}</p>
             <p className="text-xs text-earth-light mt-1">Day streak</p>
           </div>
+          </div>
         </div>
-      </div>
 
-      {/* Recent Activity from Tracking */}
-      <div className="px-6 py-4 flex-1">
-        <h2 className="text-sm font-medium text-earth-light mb-3">Recent Activity</h2>
+        {/* Recent Activity from Tracking */}
+        <div>
+          <h2 className="text-sm font-medium text-earth-light mb-3">Recent Activity</h2>
         {trackingStats.recentActivity.length > 0 ? (
           <div className="space-y-2">
             {trackingStats.recentActivity.map((activity) => (
@@ -1164,15 +1234,16 @@ export default function Home() {
             <p className="text-earth-light text-sm">No activities yet today</p>
             <p className="text-earth-light/70 text-xs mt-1">Complete a breathing exercise or watch a video to start tracking</p>
           </div>
+          )}
+        </div>
+
+        {/* CTA */}
+        {!todayCheckIn && (
+          <div>
+            <button onClick={() => navigate('/checkin')} className="w-full bg-terracotta hover:bg-terracotta-dark text-cream py-4 rounded-2xl font-medium transition-colors">Start Today's Check-in</button>
+          </div>
         )}
       </div>
-
-      {/* CTA */}
-      {!todayCheckIn && (
-        <div className="p-6 pt-0">
-          <button onClick={() => navigate('/checkin')} className="w-full bg-terracotta hover:bg-terracotta-dark text-cream py-4 rounded-2xl font-medium transition-colors">Start Today's Check-in</button>
-        </div>
-      )}
 
       <MediaPlayerModal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setSelectedMedia(null) }} media={selectedMedia} onCompleted={refreshStats} />
       <RecipeModal recipe={selectedRecipe} isOpen={recipeModalOpen} onClose={() => { setRecipeModalOpen(false); setSelectedRecipe(null) }} onTrackingUpdate={refreshStats} />

@@ -83,7 +83,7 @@ export default function VoiceInput({
     }
 
     recognition.onerror = (event) => {
-      console.error('Speech recognition error:', event.error)
+      console.error('Speech recognition error:', event.error, event)
 
       // Handle different error types
       switch (event.error) {
@@ -101,15 +101,20 @@ export default function VoiceInput({
           setError('Network error. Please check your connection.')
           break
         case 'aborted':
-          // User cancelled - not an error
+          // User cancelled or component cleanup - not an error
+          // Only log for debugging, don't show error to user
+          console.log('Speech recognition aborted (normal if you closed the modal)')
           break
         default:
           setError('Voice input failed. Try typing instead.')
       }
 
-      setIsListening(false)
-      setIsProcessing(false)
-      onListeningChange?.(false)
+      // Only update state if it's a real error (not aborted during cleanup)
+      if (event.error !== 'aborted') {
+        setIsListening(false)
+        setIsProcessing(false)
+        onListeningChange?.(false)
+      }
     }
 
     recognition.onend = () => {
@@ -125,11 +130,13 @@ export default function VoiceInput({
     recognitionRef.current = recognition
 
     return () => {
+      // Cleanup: Only abort if we're actually listening to avoid race conditions
       if (recognitionRef.current) {
         try {
-          recognitionRef.current.abort()
+          // Use stop instead of abort to avoid triggering error handlers
+          recognitionRef.current.stop()
         } catch (e) {
-          // Ignore abort errors
+          // Ignore cleanup errors
         }
       }
     }
@@ -143,9 +150,13 @@ export default function VoiceInput({
       setTextInput('')
       setIsProcessing(false)
     } else {
-      // Clean up when modal closes
-      if (isListening) {
-        stopListening()
+      // Clean up when modal closes - use ref to avoid dependency issues
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop()
+        } catch (e) {
+          // Ignore stop errors during cleanup
+        }
       }
     }
   }, [isOpen])
@@ -153,14 +164,29 @@ export default function VoiceInput({
   // Request microphone permission explicitly on mobile
   const requestMicPermission = async () => {
     try {
+      // Check if getUserMedia is available
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setError('Microphone access not supported in this browser.')
+        return false
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      // Stop the stream immediately - we just needed permission
-      stream.getTracks().forEach(track => track.stop())
+
+      // Stop all tracks immediately - we just needed permission
+      stream.getTracks().forEach(track => {
+        track.stop()
+      })
+
+      // Ensure stream is fully released
+      await new Promise(resolve => setTimeout(resolve, 50))
+
       return true
     } catch (err) {
       console.error('Mic permission error:', err)
       if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
         setError('Microphone access denied. Please allow microphone access in your browser settings.')
+      } else if (err.name === 'NotFoundError') {
+        setError('No microphone found. Please check your device.')
       } else {
         setError('Could not access microphone. Please check your device settings.')
       }
@@ -179,9 +205,18 @@ export default function VoiceInput({
     if (isMobile) {
       const hasPermission = await requestMicPermission()
       if (!hasPermission) return
+
+      // Small delay to ensure microphone is properly released after permission check
+      await new Promise(resolve => setTimeout(resolve, 100))
     }
 
     try {
+      // Double-check we still have a valid recognition instance
+      if (!recognitionRef.current) {
+        setError('Voice input not available. Please refresh and try again.')
+        return
+      }
+
       recognitionRef.current.start()
     } catch (err) {
       console.error('Failed to start recognition:', err)
@@ -248,7 +283,7 @@ export default function VoiceInput({
             <button
               onClick={isListening ? stopListening : startListening}
               disabled={isProcessing}
-              className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 transition-all ${
+              className={`inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full mx-auto mb-4 transition-all ${
                 isProcessing
                   ? 'bg-sand cursor-wait'
                   : isListening
@@ -258,12 +293,15 @@ export default function VoiceInput({
               style={{ WebkitTapHighlightColor: 'transparent' }}
             >
               {isProcessing ? (
-                <Loader2 className="w-8 h-8 text-earth-light animate-spin" />
+                <Loader2 className="w-5 h-5 text-earth-light animate-spin" />
               ) : isListening ? (
-                <MicOff className="w-8 h-8 text-cream" />
+                <MicOff className="w-5 h-5 text-cream" />
               ) : (
-                <Mic className="w-8 h-8 text-cream" />
+                <Mic className="w-5 h-5 text-cream" />
               )}
+              <span className="text-cream font-medium text-sm">
+                {isListening ? 'Numa is listening...' : 'Talk with Numa'}
+              </span>
             </button>
 
             {/* Listening indicator animation */}
