@@ -37,9 +37,9 @@ import {
   Award,
   Activity
 } from 'lucide-react'
-import breathingImg from '../assets/illustrations/breathing-01.png'
-import sleepImg from '../assets/illustrations/sleep-01.png'
-import yogaImg from '../assets/illustrations/yoga-01.png'
+const breathingImg = "/illustrations/breathing-01.png.webp";
+const sleepImg = "/illustrations/sleep-01.png.webp";
+const yogaImg = "/illustrations/yoga-01.png.webp";
 
 function getGreeting() {
   const hour = new Date().getHours()
@@ -1172,7 +1172,7 @@ export default function Home() {
         </div>
 
         {/* Featured for you */}
-        <div>
+        <div className="mb-8">
           <h2 className="text-sm font-medium text-earth mb-3">Featured for you</h2>
           <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 md:-mx-8 md:px-8 scrollbar-hide">
             <SquareActivityCard

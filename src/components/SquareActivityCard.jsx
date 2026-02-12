@@ -36,7 +36,7 @@ export default function SquareActivityCard({
   return (
     <button
       onClick={onClick}
-      className={`flex-shrink-0 w-48 bg-white rounded-2xl border border-sand hover:border-sage hover:shadow-lg transition-all hover:scale-[1.02] overflow-hidden text-left ${className}`}
+      className={`flex-shrink-0 w-48 bg-white rounded-2xl border border-sand hover:border-sage hover:shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98] overflow-hidden text-left cursor-pointer ${className}`}
     >
       {/* Illustration */}
       <div className="h-48 bg-gradient-to-br from-sage/10 to-terracotta/10 flex items-center justify-center overflow-hidden">
