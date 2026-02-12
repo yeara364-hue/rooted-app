@@ -4,6 +4,7 @@ import { useUser } from '../context/UserContext'
 import { getMemory, getInsights } from '../lib/memory'
 import NumaAvatar from '../components/NumaAvatar'
 import MediaPlayerModal from '../components/MediaPlayerModal'
+import SquareActivityCard from '../components/SquareActivityCard'
 import {
   markCompleted,
   getAllStats,
@@ -36,6 +37,9 @@ import {
   Award,
   Activity
 } from 'lucide-react'
+import breathingImg from '../assets/illustrations/breathing-01.png'
+import sleepImg from '../assets/illustrations/sleep-01.png'
+import yogaImg from '../assets/illustrations/yoga-01.png'
 
 function getGreeting() {
   const hour = new Date().getHours()
@@ -1056,6 +1060,9 @@ export default function Home() {
     }
   }
 
+  // Helper to resolve asset paths with Vite base URL
+  const withBase = (p) => `${import.meta.env.BASE_URL}${p.replace(/^\//, '')}`
+
   return (
     <div className="min-h-screen bg-cream flex flex-col pb-20">
       <div className="max-w-5xl mx-auto w-full px-4 md:px-8 py-6 space-y-6">
@@ -1161,6 +1168,46 @@ export default function Home() {
                 </button>
               )
             })}
+          </div>
+        </div>
+
+        {/* Featured for you */}
+        <div>
+          <h2 className="text-sm font-medium text-earth mb-3">Featured for you</h2>
+          <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 md:-mx-8 md:px-8 scrollbar-hide">
+            <SquareActivityCard
+              title="Calm Breathing"
+              subtitle="5-minute guided breathing exercise for instant calm"
+              duration="5 min"
+              platform="in-app"
+              illustration={breathingImg}
+              onClick={() => {
+                const breathingItem = recommendations.find(r => r.type === 'breathing')
+                if (breathingItem) handleRecommendationClick(breathingItem)
+              }}
+            />
+            <SquareActivityCard
+              title="Deep Sleep Meditation"
+              subtitle="Fall asleep faster with this calming meditation"
+              duration="20 min"
+              platform="youtube"
+              illustration={sleepImg}
+              onClick={() => {
+                const mediaItem = recommendations.find(r => r.type === 'media' && r.category === 'meditation')
+                if (mediaItem) handleRecommendationClick(mediaItem)
+              }}
+            />
+            <SquareActivityCard
+              title="Morning Yoga Flow"
+              subtitle="Gentle stretches to start your day with energy"
+              duration="15 min"
+              platform="spotify"
+              illustration={yogaImg}
+              onClick={() => {
+                const yogaItem = recommendations.find(r => r.type === 'media' && r.category === 'yoga')
+                if (yogaItem) handleRecommendationClick(yogaItem)
+              }}
+            />
           </div>
         </div>
 
