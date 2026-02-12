@@ -318,7 +318,7 @@ const moodOptions = [
 ]
 
 // Recipe Modal Component
-function RecipeModal({ recipe, isOpen, onClose, onTrackingUpdate }) {
+function RecipeModal({ recipe, isOpen, onClose, onTrackingUpdate, onActionComplete }) {
   const [completed, setCompleted] = useState(false)
 
   useEffect(() => {
@@ -333,6 +333,7 @@ function RecipeModal({ recipe, isOpen, onClose, onTrackingUpdate }) {
     markCompleted(recipe.id, ContentType.RECIPE, CompletionMethod.VERIFIED, recipe.title, 0)
     setCompleted(true)
     if (onTrackingUpdate) onTrackingUpdate()
+    if (onActionComplete) onActionComplete()
   }
 
   return (
@@ -453,7 +454,7 @@ function BreathingCard({ item, mood, onTrackingUpdate }) {
 }
 
 // Compact Breathing Card for Top Picks
-function CompactBreathingCard({ item, onStart, onTrackingUpdate }) {
+function CompactBreathingCard({ item, onStart, onTrackingUpdate, onActionComplete }) {
   const [isActive, setIsActive] = useState(false)
   const [timeLeft, setTimeLeft] = useState(item.duration)
   const [phase, setPhase] = useState('ready')
@@ -471,6 +472,7 @@ function CompactBreathingCard({ item, onStart, onTrackingUpdate }) {
             markCompleted(item.id, ContentType.BREATHING, CompletionMethod.VERIFIED, item.title, item.duration)
             setCompleted(true)
             if (onTrackingUpdate) onTrackingUpdate()
+            if (onActionComplete) onActionComplete()
             return 0
           }
           return t - 1
@@ -484,7 +486,7 @@ function CompactBreathingCard({ item, onStart, onTrackingUpdate }) {
       }, 1000)
     }
     return () => clearInterval(intervalRef.current)
-  }, [isActive, timeLeft, pattern, item, onTrackingUpdate])
+  }, [isActive, timeLeft, pattern, item, onTrackingUpdate, onActionComplete])
 
   const handleClick = () => {
     if (isActive) {
@@ -579,7 +581,7 @@ function MicroActionCard({ item, mood, onTrackingUpdate }) {
 }
 
 // Compact Micro Action Card for Top Picks
-function CompactMicroCard({ item, onTrackingUpdate }) {
+function CompactMicroCard({ item, onTrackingUpdate, onActionComplete }) {
   const [isActive, setIsActive] = useState(false)
   const [timeLeft, setTimeLeft] = useState(60)
   const [completed, setCompleted] = useState(() => isCompletedToday(item.id))
@@ -594,6 +596,7 @@ function CompactMicroCard({ item, onTrackingUpdate }) {
             markCompleted(item.id, ContentType.MICRO, CompletionMethod.VERIFIED, item.title, 60)
             setCompleted(true)
             if (onTrackingUpdate) onTrackingUpdate()
+            if (onActionComplete) onActionComplete()
             return 0
           }
           return t - 1
@@ -601,7 +604,7 @@ function CompactMicroCard({ item, onTrackingUpdate }) {
       }, 1000)
     }
     return () => clearInterval(intervalRef.current)
-  }, [isActive, timeLeft, item, onTrackingUpdate])
+  }, [isActive, timeLeft, item, onTrackingUpdate, onActionComplete])
 
   const handleClick = () => {
     if (isActive) {
@@ -611,6 +614,7 @@ function CompactMicroCard({ item, onTrackingUpdate }) {
       markCompleted(item.id, ContentType.MICRO, CompletionMethod.VERIFIED, item.title, 60 - timeLeft)
       setCompleted(true)
       if (onTrackingUpdate) onTrackingUpdate()
+      if (onActionComplete) onActionComplete()
     } else if (!completed) {
       setIsActive(true)
       setTimeLeft(60)
@@ -699,7 +703,7 @@ function JournalCard({ item, mood, onTrackingUpdate }) {
 }
 
 // Compact Journal Card for Top Picks
-function CompactJournalCard({ item, onTrackingUpdate }) {
+function CompactJournalCard({ item, onTrackingUpdate, onActionComplete }) {
   const [isOpen, setIsOpen] = useState(false)
   const [text, setText] = useState('')
   const [completed, setCompleted] = useState(() => isCompletedToday(item.id))
@@ -711,6 +715,7 @@ function CompactJournalCard({ item, onTrackingUpdate }) {
       setIsOpen(false)
       setText('')
       if (onTrackingUpdate) onTrackingUpdate()
+      if (onActionComplete) onActionComplete()
     }
   }
 
@@ -835,6 +840,40 @@ function CompactMediaCard({ item, onClick, getCategoryColor, getCategoryIcon }) 
   )
 }
 
+// Tooltip messages by mood
+const TOOLTIP_MESSAGES = {
+  stressed: [
+    "You're doing great! Taking a moment for yourself is powerful.",
+    "Proud of you for choosing to pause and breathe.",
+    "Small steps like this make a big difference."
+  ],
+  sad: [
+    "I see you taking care of yourself. That takes courage.",
+    "You showed up for yourself today. That matters.",
+    "Every small act of self-care counts."
+  ],
+  tired: [
+    "Rest is productive. You're listening to your body.",
+    "Good job honoring what you need right now.",
+    "You're taking care of yourself. Keep going."
+  ],
+  angry: [
+    "You channeled that energy into something healthy. Well done.",
+    "Choosing this was a powerful move. Nice work.",
+    "You're handling this with strength."
+  ],
+  happy: [
+    "Love seeing you invest in your wellbeing!",
+    "You're building great habits. Keep it up!",
+    "That positive energy is contagious!"
+  ],
+  neutral: [
+    "Great job completing that!",
+    "You're building consistency. Nice work.",
+    "Every action adds up. Keep going!"
+  ]
+}
+
 export default function Home() {
   const navigate = useNavigate()
   const { user, todayCheckIn } = useUser()
@@ -855,6 +894,10 @@ export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [recipeModalOpen, setRecipeModalOpen] = useState(false)
   const [selectedRecipe, setSelectedRecipe] = useState(null)
+  const [tooltipMessage, setTooltipMessage] = useState('')
+  const [showTooltip, setShowTooltip] = useState(false)
+  const [recommendations, setRecommendations] = useState([])
+  const tooltipTimeoutRef = useRef(null)
 
   // Tracking stats state
   const [trackingStats, setTrackingStats] = useState(() => getAllStats())
@@ -872,9 +915,50 @@ export default function Home() {
   }, [refreshStats])
 
   const currentMood = detectedMood || selectedMood || 'neutral'
-  const recommendations = getRecommendationsForMood(currentMood, detectedSignals)
+
+  // Re-compute recommendations whenever selectedMood changes
+  useEffect(() => {
+    const newRecommendations = getRecommendationsForMood(currentMood, detectedSignals)
+    setRecommendations(newRecommendations)
+  }, [currentMood, detectedSignals])
+
   const topPicks = getTopPicks(recommendations)
   const moreOptions = recommendations.filter(r => !topPicks.find(tp => tp.id === r.id))
+
+  // Trigger tooltip when action is completed
+  const triggerTooltip = useCallback(() => {
+    const messages = TOOLTIP_MESSAGES[currentMood] || TOOLTIP_MESSAGES.neutral
+    const randomMessage = messages[Math.floor(Math.random() * messages.length)]
+
+    setTooltipMessage(randomMessage)
+    setShowTooltip(true)
+    setNumaState('awake')
+
+    // Clear any existing timeout
+    if (tooltipTimeoutRef.current) {
+      clearTimeout(tooltipTimeoutRef.current)
+    }
+
+    // Auto-hide after 2.8 seconds and return to sleeping
+    tooltipTimeoutRef.current = setTimeout(() => {
+      setShowTooltip(false)
+      setNumaState('sleeping')
+    }, 2800)
+  }, [currentMood])
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (tooltipTimeoutRef.current) {
+        clearTimeout(tooltipTimeoutRef.current)
+      }
+    }
+  }, [])
+
+  // Action complete callback
+  const onActionComplete = useCallback(() => {
+    triggerTooltip()
+  }, [triggerTooltip])
 
   const handleMoodSelect = (moodId) => {
     setSelectedMood(moodId)
@@ -952,9 +1036,9 @@ export default function Home() {
   // Compact card renderer for Top Picks (horizontal layout)
   const renderCompactCard = (item) => {
     switch (item.type) {
-      case 'breathing': return <CompactBreathingCard key={item.id} item={item} onStart={() => {}} onTrackingUpdate={refreshStats} />
-      case 'micro': return <CompactMicroCard key={item.id} item={item} onTrackingUpdate={refreshStats} />
-      case 'journal': return <CompactJournalCard key={item.id} item={item} onTrackingUpdate={refreshStats} />
+      case 'breathing': return <CompactBreathingCard key={item.id} item={item} onStart={() => {}} onTrackingUpdate={refreshStats} onActionComplete={onActionComplete} />
+      case 'micro': return <CompactMicroCard key={item.id} item={item} onTrackingUpdate={refreshStats} onActionComplete={onActionComplete} />
+      case 'journal': return <CompactJournalCard key={item.id} item={item} onTrackingUpdate={refreshStats} onActionComplete={onActionComplete} />
       case 'recipe': return <CompactRecipeCard key={item.id} item={item} onOpen={() => { setSelectedRecipe(item); setRecipeModalOpen(true) }} />
       case 'info': return null // Skip info cards in top picks
       case 'media': default:
@@ -979,7 +1063,7 @@ export default function Home() {
               </span>
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-sage/10 text-sage">Breathing</span>
             </div>
-            <CompactBreathingCard item={item} onStart={() => {}} onTrackingUpdate={refreshStats} />
+            <CompactBreathingCard item={item} onStart={() => {}} onTrackingUpdate={refreshStats} onActionComplete={onActionComplete} />
           </div>
         </div>
       )
@@ -997,7 +1081,7 @@ export default function Home() {
               </span>
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-terracotta/10 text-terracotta">Micro Action</span>
             </div>
-            <CompactMicroCard item={item} onTrackingUpdate={refreshStats} />
+            <CompactMicroCard item={item} onTrackingUpdate={refreshStats} onActionComplete={onActionComplete} />
           </div>
         </div>
       )
@@ -1012,7 +1096,7 @@ export default function Home() {
             <div className="flex items-center gap-2 mb-3">
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-earth/10 text-earth">Journal</span>
             </div>
-            <CompactJournalCard item={item} onTrackingUpdate={refreshStats} />
+            <CompactJournalCard item={item} onTrackingUpdate={refreshStats} onActionComplete={onActionComplete} />
           </div>
         </div>
       )
@@ -1078,8 +1162,14 @@ export default function Home() {
         </div>
 
         {/* Numa Avatar */}
-        <div className="flex justify-center">
+        <div className="flex justify-center relative">
           <NumaAvatar mood={currentMood} state={numaState} size={80} />
+          {showTooltip && (
+            <div className="absolute -bottom-16 left-1/2 transform -translate-x-1/2 bg-sage text-cream px-4 py-2 rounded-xl shadow-lg animate-fadeSlideUp whitespace-nowrap text-sm font-medium z-10">
+              {tooltipMessage}
+              <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-b-8 border-transparent border-b-sage"></div>
+            </div>
+          )}
         </div>
 
         {/* Numa's Enhanced Reply */}
@@ -1293,7 +1383,7 @@ export default function Home() {
       </div>
 
       <MediaPlayerModal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setSelectedMedia(null) }} media={selectedMedia} onCompleted={refreshStats} />
-      <RecipeModal recipe={selectedRecipe} isOpen={recipeModalOpen} onClose={() => { setRecipeModalOpen(false); setSelectedRecipe(null) }} onTrackingUpdate={refreshStats} />
+      <RecipeModal recipe={selectedRecipe} isOpen={recipeModalOpen} onClose={() => { setRecipeModalOpen(false); setSelectedRecipe(null) }} onTrackingUpdate={refreshStats} onActionComplete={onActionComplete} />
 
       {/* Animation styles */}
       <style>{`
