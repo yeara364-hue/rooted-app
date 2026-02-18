@@ -117,16 +117,18 @@ function App() {
   }, [])
 
   return (
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <UserProvider>
         <AppRoutes />
       </UserProvider>
-      <button
-        onClick={() => trackEvent({ event_name: 'manual_test', mood: 'awake', meta: { clicked: true } })}
-        style={{ position: 'fixed', bottom: 80, right: 16, zIndex: 9999, padding: '8px 16px', background: '#e74c3c', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer' }}
-      >
-        Send test event
-      </button>
+      {import.meta.env.DEV && (
+        <button
+          onClick={() => trackEvent({ event_name: 'manual_test', mood: 'awake', meta: { clicked: true } })}
+          style={{ position: 'fixed', bottom: 80, right: 16, zIndex: 9999, padding: '8px 16px', background: '#e74c3c', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer' }}
+        >
+          Send test event
+        </button>
+      )}
     </BrowserRouter>
   )
 }
