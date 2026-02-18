@@ -1,5 +1,7 @@
+import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { UserProvider, useUser } from './context/UserContext'
+import { trackEvent } from './lib/trackEvent'
 import Welcome from './pages/Welcome'
 import Onboarding from './pages/Onboarding'
 import Login from './pages/Login'
@@ -109,11 +111,22 @@ function AppRoutes() {
 }
 
 function App() {
+  useEffect(() => {
+    console.log('app_loaded fired')
+    trackEvent({ event_name: 'app_loaded', mood: 'awake', meta: { test: true } })
+  }, [])
+
   return (
     <BrowserRouter>
       <UserProvider>
         <AppRoutes />
       </UserProvider>
+      <button
+        onClick={() => trackEvent({ event_name: 'manual_test', mood: 'awake', meta: { clicked: true } })}
+        style={{ position: 'fixed', bottom: 80, right: 16, zIndex: 9999, padding: '8px 16px', background: '#e74c3c', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer' }}
+      >
+        Send test event
+      </button>
     </BrowserRouter>
   )
 }

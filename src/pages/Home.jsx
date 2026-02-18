@@ -2,6 +2,9 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useUser } from '../context/UserContext'
 import { getMemory, getInsights } from '../lib/memory'
+import { trackEvent } from '../lib/trackEvent'
+import { getRecommendations } from '../lib/getRecommendations'
+import { moodOptions } from '../lib/contentPool'
 import NumaAvatar from '../components/NumaAvatar'
 import MediaPlayerModal from '../components/MediaPlayerModal'
 import SquareActivityCard from '../components/SquareActivityCard'
@@ -67,8 +70,12 @@ function detectMood(text) {
   const lowerText = text.toLowerCase()
   const moodKeywords = {
     sad: ['sad', 'down', 'depressed', 'unhappy', 'lonely', 'hopeless', 'crying', 'tears', 'miserable', 'heartbroken', 'grief', 'blue', 'low', 'upset', 'hurt', 'broken'],
-    stressed: ['stressed', 'anxious', 'anxiety', 'overwhelmed', 'worried', 'panic', 'nervous', 'tense', 'pressure', 'frantic', 'scared', 'afraid', 'freaking'],
-    tired: ['tired', 'exhausted', 'drained', 'sleepy', 'fatigued', 'worn out', 'low energy', 'sluggish', 'burnt out', 'weary', 'drowsy'],
+    stressed: ['stressed', 'tense', 'pressure', 'frantic', 'stressful', 'stress'],
+    anxious: ['anxious', 'anxiety', 'worried', 'panic', 'nervous', 'scared', 'afraid', 'freaking', 'fear'],
+    overwhelmed: ['overwhelmed', 'too much', 'drowning', 'swamped', 'buried', 'cant cope', "can't cope"],
+    tired: ['tired', 'exhausted', 'sleepy', 'fatigued', 'worn out', 'burnt out', 'weary', 'drowsy'],
+    lowEnergy: ['low energy', 'no energy', 'sluggish', 'drained', 'depleted', 'lethargic'],
+    unfocused: ['unfocused', 'distracted', 'scattered', 'cant concentrate', "can't focus", 'mind wandering'],
     angry: ['angry', 'frustrated', 'annoyed', 'irritated', 'mad', 'furious', 'pissed', 'rage', 'hate', 'fed up'],
     happy: ['happy', 'great', 'wonderful', 'amazing', 'fantastic', 'joyful', 'blessed', 'grateful', 'good', 'positive', 'excited', 'awesome', 'love', 'calm', 'peaceful', 'relaxed', 'content', 'fine', 'okay', 'energized', 'motivated']
   }
@@ -104,161 +111,7 @@ function extractSignals(text) {
   return detected
 }
 
-// Smoothie recipes for sad/stressed moods
-const smoothieRecipes = {
-  stressed: {
-    id: 'recipe-stress',
-    type: 'recipe',
-    title: 'Calm & Cool Smoothie',
-    subtitle: 'Magnesium-rich stress reliever',
-    signal: 'body',
-    ingredients: ['1 banana (frozen)', '1 cup spinach', '1 tbsp almond butter', '1 cup oat milk', '1 tbsp honey', 'Pinch of cinnamon'],
-    steps: ['Add oat milk to blender', 'Add frozen banana and spinach', 'Add almond butter and honey', 'Blend until smooth', 'Top with cinnamon', 'Enjoy slowly, mindfully']
-  },
-  sad: {
-    id: 'recipe-sad',
-    type: 'recipe',
-    title: 'Sunshine Mood Boost',
-    subtitle: 'Vitamin D & serotonin support',
-    signal: 'body',
-    ingredients: ['1 cup mango (frozen)', '1/2 banana', '1 cup orange juice', '1 tbsp chia seeds', '1/2 cup Greek yogurt', 'Splash of vanilla'],
-    steps: ['Pour orange juice into blender', 'Add frozen mango and banana', 'Add yogurt and chia seeds', 'Add vanilla splash', 'Blend until creamy', 'Sip and let the sunshine in']
-  }
-}
 
-// Expanded recommendation content per mood
-const moodContent = {
-  stressed: {
-    media: [
-      { id: 's1', type: 'media', category: 'meditation', title: 'Anxiety Relief Meditation', subtitle: 'Guided breathing for calm', duration: '10 min', platform: 'youtube', youtubeVideoId: 'O-6f5wQXSu8', signal: 'panic', relevanceBase: 10 },
-      { id: 's2', type: 'media', category: 'music', title: 'Stress Relief Playlist', subtitle: 'Calming ambient sounds', duration: '2+ hours', platform: 'spotify', spotifyPlaylistId: '37i9dQZF1DWXe9gFZP0gtP', signal: 'work', relevanceBase: 8 },
-      { id: 's3', type: 'media', category: 'yoga', title: 'Gentle Stress Relief Yoga', subtitle: 'Release tension in body', duration: '20 min', platform: 'youtube', youtubeVideoId: 'hJbRpHZr_d0', signal: 'body', relevanceBase: 9 }
-    ],
-    microActions: [
-      { id: 's4', type: 'micro', title: 'Shoulder Roll Release', subtitle: 'Release neck tension now', duration: '60 sec', instruction: 'Roll shoulders slowly backward 5 times, then forward 5 times. Drop shoulders away from ears.', signal: 'headache', relevanceBase: 7 },
-      { id: 's5', type: 'micro', title: 'Grounding 5-4-3-2-1', subtitle: 'Anchor to the present', duration: '90 sec', instruction: 'Name 5 things you see, 4 you hear, 3 you feel, 2 you smell, 1 you taste.', signal: 'panic', relevanceBase: 9 }
-    ],
-    journal: { id: 's6', type: 'journal', title: 'Stress Brain Dump', prompt: 'Write everything stressing you out without filtering. Then circle the ONE thing you can control right now.', signal: 'work', relevanceBase: 6 },
-    breathing: { id: 's7', type: 'breathing', title: 'Box Breathing', subtitle: '4-4-4-4 calming pattern', duration: 60, pattern: { inhale: 4, hold1: 4, exhale: 4, hold2: 4 }, signal: 'panic', relevanceBase: 10 },
-    whyHelps: { id: 's8', type: 'info', title: 'Why This Helps', content: 'Slow breathing activates your parasympathetic nervous system, signaling safety to your brain and reducing cortisol.', signal: 'focus', relevanceBase: 4 }
-  },
-  sad: {
-    media: [
-      { id: 'sd1', type: 'media', category: 'meditation', title: 'Self-Compassion Meditation', subtitle: 'Kindness for difficult times', duration: '15 min', platform: 'youtube', youtubeVideoId: 'IeblJdB2-Vo', signal: 'lonely', relevanceBase: 10 },
-      { id: 'sd2', type: 'media', category: 'music', title: 'Comfort & Healing', subtitle: 'Gentle, uplifting tracks', duration: '1+ hour', platform: 'spotify', spotifyPlaylistId: '37i9dQZF1DX3YSRoSdA634', signal: 'breakup', relevanceBase: 9 },
-      { id: 'sd3', type: 'media', category: 'movement', title: 'Mood-Lifting Walk', subtitle: 'Gentle movement meditation', duration: '10 min', platform: 'youtube', youtubeVideoId: 'inpok4MKVLM', signal: 'body', relevanceBase: 8 }
-    ],
-    microActions: [
-      { id: 'sd4', type: 'micro', title: 'Warm Cup Ritual', subtitle: 'Comfort in small moments', duration: '90 sec', instruction: 'Make a warm drink. Hold the cup with both hands. Feel the warmth. Take 3 slow sips.', signal: 'lonely', relevanceBase: 8 },
-      { id: 'sd5', type: 'micro', title: 'Hand on Heart', subtitle: 'Self-soothing touch', duration: '60 sec', instruction: 'Place hand on heart. Feel your heartbeat. Say "I\'m here for you" to yourself 3 times.', signal: 'breakup', relevanceBase: 9 }
-    ],
-    journal: { id: 'sd6', type: 'journal', title: 'Letter to Yourself', prompt: 'Write a short letter to yourself as if you were comforting a dear friend going through this.', signal: 'lonely', relevanceBase: 7 },
-    breathing: { id: 'sd7', type: 'breathing', title: 'Soothing Breath', subtitle: 'Longer exhale for calm', duration: 60, pattern: { inhale: 4, hold1: 2, exhale: 6, hold2: 0 }, signal: 'sleep', relevanceBase: 8 },
-    whyHelps: { id: 'sd8', type: 'info', title: 'Why This Helps', content: 'Self-compassion practices activate the same brain regions as receiving comfort from others, releasing oxytocin.', signal: 'social', relevanceBase: 4 }
-  },
-  tired: {
-    media: [
-      { id: 't1', type: 'media', category: 'meditation', title: 'Body Scan for Rest', subtitle: 'Release and restore', duration: '15 min', platform: 'youtube', youtubeVideoId: 'T0nuKuHmMmc', signal: 'sleep', relevanceBase: 10 },
-      { id: 't2', type: 'media', category: 'music', title: 'Sleep & Relax', subtitle: 'Soothing soundscapes', duration: '3+ hours', platform: 'spotify', spotifyPlaylistId: '37i9dQZF1DWZd79rJ6a7lp', signal: 'sleep', relevanceBase: 9 },
-      { id: 't3', type: 'media', category: 'yoga', title: 'Bedtime Yoga', subtitle: 'Gentle wind-down', duration: '12 min', platform: 'youtube', youtubeVideoId: 'BiWDsfZ3zbo', signal: 'body', relevanceBase: 8 }
-    ],
-    microActions: [
-      { id: 't4', type: 'micro', title: 'Eye Palming', subtitle: 'Rest tired eyes', duration: '60 sec', instruction: 'Rub hands together until warm. Cup over closed eyes. Breathe deeply in darkness.', signal: 'headache', relevanceBase: 7 },
-      { id: 't5', type: 'micro', title: 'Legs Up the Wall', subtitle: 'Instant energy reset', duration: '90 sec', instruction: 'Lie down, put legs up against wall or furniture. Let blood flow reverse. Breathe.', signal: 'body', relevanceBase: 8 }
-    ],
-    journal: { id: 't6', type: 'journal', title: 'Energy Audit', prompt: 'List 3 things that drained you today. List 1 thing that gave you energy. How can you get more of the latter?', signal: 'work', relevanceBase: 5 },
-    breathing: { id: 't7', type: 'breathing', title: 'Sleep Breathing', subtitle: '4-7-8 relaxation', duration: 60, pattern: { inhale: 4, hold1: 7, exhale: 8, hold2: 0 }, signal: 'sleep', relevanceBase: 10 },
-    whyHelps: { id: 't8', type: 'info', title: 'Why This Helps', content: 'The 4-7-8 breath acts as a natural tranquilizer for the nervous system, helping prepare body for sleep.', signal: 'focus', relevanceBase: 4 }
-  },
-  angry: {
-    media: [
-      { id: 'a1', type: 'media', category: 'meditation', title: 'Letting Go Meditation', subtitle: 'Release frustration', duration: '12 min', platform: 'youtube', youtubeVideoId: 'q0dM0wGZPfg', signal: 'work', relevanceBase: 9 },
-      { id: 'a2', type: 'media', category: 'music', title: 'Release & Unwind', subtitle: 'Process emotions', duration: '1+ hour', platform: 'spotify', spotifyPlaylistId: '37i9dQZF1DX3Ogo9pFvBkY', signal: 'social', relevanceBase: 8 },
-      { id: 'a3', type: 'media', category: 'yoga', title: 'Yoga for Frustration', subtitle: 'Move through it', duration: '18 min', platform: 'youtube', youtubeVideoId: 'Nw2oBIrxy_Q', signal: 'body', relevanceBase: 9 }
-    ],
-    microActions: [
-      { id: 'a4', type: 'micro', title: 'Ice Cube Hold', subtitle: 'Redirect intense feelings', duration: '60 sec', instruction: 'Hold an ice cube in your hand. Focus entirely on the sensation until it melts or feelings shift.', signal: 'panic', relevanceBase: 8 },
-      { id: 'a5', type: 'micro', title: 'Power Pose', subtitle: 'Channel the energy', duration: '90 sec', instruction: 'Stand tall, hands on hips, feet wide. Hold for 90 seconds while breathing deeply.', signal: 'motivation', relevanceBase: 7 }
-    ],
-    journal: { id: 'a6', type: 'journal', title: 'Anger Letter', prompt: 'Write an uncensored letter to whoever/whatever made you angry. Don\'t send it. Then write what you actually need.', signal: 'work', relevanceBase: 8 },
-    breathing: { id: 'a7', type: 'breathing', title: 'Cooling Breath', subtitle: 'Lower your temperature', duration: 60, pattern: { inhale: 4, hold1: 0, exhale: 8, hold2: 2 }, signal: 'panic', relevanceBase: 10 },
-    whyHelps: { id: 'a8', type: 'info', title: 'Why This Helps', content: 'Physical sensations like cold can interrupt anger\'s momentum by engaging different neural pathways.', signal: 'focus', relevanceBase: 4 }
-  },
-  happy: {
-    media: [
-      { id: 'h1', type: 'media', category: 'meditation', title: 'Gratitude Meditation', subtitle: 'Amplify your joy', duration: '10 min', platform: 'youtube', youtubeVideoId: 'Lxprri_H9Is', signal: 'motivation', relevanceBase: 9 },
-      { id: 'h2', type: 'media', category: 'music', title: 'Happy Hits', subtitle: 'Feel-good favorites', duration: '2+ hours', platform: 'spotify', spotifyPlaylistId: '37i9dQZF1DXdPec7aLTmlC', signal: 'social', relevanceBase: 10 },
-      { id: 'h3', type: 'media', category: 'yoga', title: 'Joyful Morning Flow', subtitle: 'Celebrate your body', duration: '20 min', platform: 'youtube', youtubeVideoId: 'sTANio_2E0Q', signal: 'body', relevanceBase: 8 }
-    ],
-    microActions: [
-      { id: 'h4', type: 'micro', title: 'Joy List', subtitle: 'Capture this feeling', duration: '60 sec', instruction: 'Write down 3 things making you happy right now. Save this list for harder days.', signal: 'motivation', relevanceBase: 9 },
-      { id: 'h5', type: 'micro', title: 'Share the Joy', subtitle: 'Spread positive energy', duration: '90 sec', instruction: 'Text someone you appreciate. Just one sentence about why they matter to you.', signal: 'social', relevanceBase: 8 }
-    ],
-    journal: { id: 'h6', type: 'journal', title: 'Peak Moment Capture', prompt: 'Describe this good feeling in detail. What led to it? How can you create more moments like this?', signal: 'motivation', relevanceBase: 7 },
-    breathing: { id: 'h7', type: 'breathing', title: 'Energizing Breath', subtitle: 'Amplify good vibes', duration: 60, pattern: { inhale: 4, hold1: 4, exhale: 4, hold2: 0 }, signal: 'focus', relevanceBase: 6 },
-    whyHelps: { id: 'h8', type: 'info', title: 'Why This Helps', content: 'Savoring positive moments strengthens neural pathways for happiness, making joy more accessible over time.', signal: 'focus', relevanceBase: 4 }
-  },
-  neutral: {
-    media: [
-      { id: 'n1', type: 'media', category: 'meditation', title: 'Mindful Moment', subtitle: 'Center yourself', duration: '10 min', platform: 'youtube', youtubeVideoId: 'inpok4MKVLM', signal: 'focus', relevanceBase: 8 },
-      { id: 'n2', type: 'media', category: 'music', title: 'Focus Flow', subtitle: 'Lo-fi beats', duration: '2+ hours', platform: 'spotify', spotifyPlaylistId: '37i9dQZF1DWZeKCadgRdKQ', signal: 'work', relevanceBase: 9 },
-      { id: 'n3', type: 'media', category: 'yoga', title: 'Daily Yoga Practice', subtitle: 'Balance mind & body', duration: '15 min', platform: 'youtube', youtubeVideoId: 'g_tea8ZNk5A', signal: 'body', relevanceBase: 8 }
-    ],
-    microActions: [
-      { id: 'n4', type: 'micro', title: 'Mindful Minute', subtitle: 'Present moment awareness', duration: '60 sec', instruction: 'Close eyes. Notice 3 sounds, 2 physical sensations, 1 emotion. Open eyes refreshed.', signal: 'focus', relevanceBase: 7 },
-      { id: 'n5', type: 'micro', title: 'Gratitude Pause', subtitle: 'Shift perspective', duration: '60 sec', instruction: 'Think of 3 small things you\'re grateful for today. Really feel the appreciation.', signal: 'motivation', relevanceBase: 7 }
-    ],
-    journal: { id: 'n6', type: 'journal', title: 'Check-in Questions', prompt: 'What do I need right now? What am I avoiding? What would make today feel complete?', signal: 'focus', relevanceBase: 6 },
-    breathing: { id: 'n7', type: 'breathing', title: 'Balancing Breath', subtitle: 'Equal inhale & exhale', duration: 60, pattern: { inhale: 4, hold1: 2, exhale: 4, hold2: 2 }, signal: 'focus', relevanceBase: 8 },
-    whyHelps: { id: 'n8', type: 'info', title: 'Why This Helps', content: 'Regular mindfulness practice builds emotional awareness, helping you recognize and respond to feelings earlier.', signal: 'focus', relevanceBase: 4 }
-  }
-}
-
-// Calculate relevance score for an item based on mood and signals
-function calculateRelevance(item, mood, signals) {
-  let score = item.relevanceBase || 5
-  // Boost if item signal matches any detected signal
-  if (signals.includes(item.signal)) score += 5
-  // Small boost for breathing/micro for immediate relief
-  if (item.type === 'breathing' || item.type === 'micro') score += 2
-  // Boost media slightly for engagement
-  if (item.type === 'media') score += 1
-  return score
-}
-
-// Get all recommendations with relevance scores
-function getRecommendationsForMood(mood, signals = []) {
-  const content = moodContent[mood] || moodContent.neutral
-  const primarySignal = signals.length > 0 ? signals[0] : null
-
-  let items = [
-    ...content.media.map(item => ({ ...item, reason: primarySignal || item.signal })),
-    ...content.microActions.map(item => ({ ...item, reason: primarySignal || item.signal })),
-    { ...content.journal, reason: primarySignal || content.journal.signal },
-    { ...content.breathing, reason: primarySignal || content.breathing.signal },
-    { ...content.whyHelps, reason: primarySignal || content.whyHelps.signal }
-  ]
-
-  // Add smoothie recipe for sad/stressed moods
-  if ((mood === 'sad' || mood === 'stressed') && smoothieRecipes[mood]) {
-    items.push({ ...smoothieRecipes[mood], reason: primarySignal || 'body', relevanceBase: 7 })
-  }
-
-  // Calculate relevance for each item
-  items = items.map(item => ({
-    ...item,
-    relevanceScore: calculateRelevance(item, mood, signals)
-  }))
-
-  return items
-}
-
-// Get top 3 picks sorted by relevance
-function getTopPicks(recommendations) {
-  return [...recommendations]
-    .sort((a, b) => b.relevanceScore - a.relevanceScore)
-    .slice(0, 3)
-}
 
 // Generate enhanced Numa reply with top picks reference
 function generateEnhancedNumaReply(mood, signals, topPicks, userName) {
@@ -271,7 +124,11 @@ function generateEnhancedNumaReply(mood, signals, topPicks, userName) {
     tired: `Your body is asking for rest, ${name}. Let's be gentle with your energy.`,
     angry: `Those feelings are valid, ${name}. Let's channel them in a healthy way.`,
     happy: `I love that energy, ${name}! Let's make the most of this good feeling.`,
-    neutral: `Thanks for checking in, ${name}. I've got some ideas for you.`
+    neutral: `Thanks for checking in, ${name}. I've got some ideas for you.`,
+    anxious: `I notice you're feeling on edge, ${name}. Let's bring some calm into this moment.`,
+    unfocused: `Scattered thoughts can be frustrating, ${name}. Let's help you center.`,
+    lowEnergy: `Running on empty, ${name}? Let's find a gentle way to recharge.`,
+    overwhelmed: `That's a lot to carry, ${name}. Let's simplify this moment together.`
   }
 
   const signalPhrases = {
@@ -309,14 +166,6 @@ function generateEnhancedNumaReply(mood, signals, topPicks, userName) {
   return { intro, explanation, topPicks }
 }
 
-const moodOptions = [
-  { id: 'happy', emoji: '😊', label: 'Happy' },
-  { id: 'sad', emoji: '😢', label: 'Sad' },
-  { id: 'stressed', emoji: '😰', label: 'Stressed' },
-  { id: 'tired', emoji: '😴', label: 'Tired' },
-  { id: 'angry', emoji: '😠', label: 'Angry' }
-]
-
 // Recipe Modal Component
 function RecipeModal({ recipe, isOpen, onClose, onTrackingUpdate, onActionComplete }) {
   const [completed, setCompleted] = useState(false)
@@ -333,7 +182,7 @@ function RecipeModal({ recipe, isOpen, onClose, onTrackingUpdate, onActionComple
     markCompleted(recipe.id, ContentType.RECIPE, CompletionMethod.VERIFIED, recipe.title, 0)
     setCompleted(true)
     if (onTrackingUpdate) onTrackingUpdate()
-    if (onActionComplete) onActionComplete()
+    if (onActionComplete) onActionComplete(recipe.title)
   }
 
   return (
@@ -472,7 +321,7 @@ function CompactBreathingCard({ item, onStart, onTrackingUpdate, onActionComplet
             markCompleted(item.id, ContentType.BREATHING, CompletionMethod.VERIFIED, item.title, item.duration)
             setCompleted(true)
             if (onTrackingUpdate) onTrackingUpdate()
-            if (onActionComplete) onActionComplete()
+            if (onActionComplete) onActionComplete(item.title)
             return 0
           }
           return t - 1
@@ -504,7 +353,7 @@ function CompactBreathingCard({ item, onStart, onTrackingUpdate, onActionComplet
   const phaseText = { ready: 'Start', inhale: 'In...', hold: 'Hold...', exhale: 'Out...', done: 'Done!' }
 
   return (
-    <button onClick={handleClick} className={`w-full flex items-center gap-3 p-3 ${completed ? 'bg-sage/10' : 'bg-white/50 hover:bg-white/70'} rounded-xl border ${completed ? 'border-sage/40' : 'border-sage/20'} transition-all group`}>
+    <button onClick={handleClick} className={`w-full flex items-center gap-3 p-3 ${completed ? 'bg-sage/10' : 'bg-gradient-to-r from-white/60 to-white/30 backdrop-blur-sm shadow-sm hover:shadow-md'} rounded-xl border ${completed ? 'border-sage/40' : 'border-sage/20'} transition-all group`}>
       <div className={`w-10 h-10 rounded-full ${isActive ? 'bg-sage' : 'bg-sage/20'} flex items-center justify-center flex-shrink-0 transition-all duration-500 ${phase === 'inhale' ? 'scale-125' : phase === 'exhale' ? 'scale-75' : 'scale-100'}`}>
         {completed && !isActive ? <CheckCircle2 className="w-5 h-5 text-sage" /> : <Wind className={`w-5 h-5 ${isActive ? 'text-cream' : 'text-sage'}`} />}
       </div>
@@ -596,7 +445,7 @@ function CompactMicroCard({ item, onTrackingUpdate, onActionComplete }) {
             markCompleted(item.id, ContentType.MICRO, CompletionMethod.VERIFIED, item.title, 60)
             setCompleted(true)
             if (onTrackingUpdate) onTrackingUpdate()
-            if (onActionComplete) onActionComplete()
+            if (onActionComplete) onActionComplete(item.title)
             return 0
           }
           return t - 1
@@ -614,7 +463,7 @@ function CompactMicroCard({ item, onTrackingUpdate, onActionComplete }) {
       markCompleted(item.id, ContentType.MICRO, CompletionMethod.VERIFIED, item.title, 60 - timeLeft)
       setCompleted(true)
       if (onTrackingUpdate) onTrackingUpdate()
-      if (onActionComplete) onActionComplete()
+      if (onActionComplete) onActionComplete(item.title)
     } else if (!completed) {
       setIsActive(true)
       setTimeLeft(60)
@@ -622,7 +471,7 @@ function CompactMicroCard({ item, onTrackingUpdate, onActionComplete }) {
   }
 
   return (
-    <div className={`w-full flex items-center gap-3 p-3 ${completed ? 'bg-sage/10' : 'bg-white/50 hover:bg-white/70'} rounded-xl border ${completed ? 'border-sage/40' : 'border-terracotta/20'} transition-all`}>
+    <div className={`w-full flex items-center gap-3 p-3 ${completed ? 'bg-sage/10' : 'bg-gradient-to-r from-white/60 to-white/30 backdrop-blur-sm shadow-sm hover:shadow-md'} rounded-xl border ${completed ? 'border-sage/40' : 'border-terracotta/20'} transition-all`}>
       <div className={`w-10 h-10 rounded-full ${isActive ? 'bg-terracotta animate-pulse' : completed ? 'bg-sage/30' : 'bg-terracotta/20'} flex items-center justify-center flex-shrink-0`}>
         {completed && !isActive ? <CheckCircle2 className="w-5 h-5 text-sage" /> : isActive ? <Timer className="w-5 h-5 text-cream" /> : <Zap className="w-5 h-5 text-terracotta" />}
       </div>
@@ -715,13 +564,13 @@ function CompactJournalCard({ item, onTrackingUpdate, onActionComplete }) {
       setIsOpen(false)
       setText('')
       if (onTrackingUpdate) onTrackingUpdate()
-      if (onActionComplete) onActionComplete()
+      if (onActionComplete) onActionComplete(item.title)
     }
   }
 
   return (
     <>
-      <button onClick={() => setIsOpen(true)} className={`w-full flex items-center gap-3 p-3 ${completed ? 'bg-sage/10' : 'bg-white/50 hover:bg-white/70'} rounded-xl border ${completed ? 'border-sage/40' : 'border-earth/20'} transition-all text-left`}>
+      <button onClick={() => setIsOpen(true)} className={`w-full flex items-center gap-3 p-3 ${completed ? 'bg-sage/10' : 'bg-gradient-to-r from-white/60 to-white/30 backdrop-blur-sm shadow-sm hover:shadow-md'} rounded-xl border ${completed ? 'border-sage/40' : 'border-earth/20'} transition-all text-left`}>
         <div className={`w-10 h-10 rounded-full ${completed ? 'bg-sage/30' : 'bg-earth/20'} flex items-center justify-center flex-shrink-0`}>
           {completed ? <CheckCircle2 className="w-5 h-5 text-sage" /> : <PenLine className="w-5 h-5 text-earth" />}
         </div>
@@ -807,7 +656,7 @@ function CompactRecipeCard({ item, onOpen }) {
   const [completed] = useState(() => isCompletedToday(item.id))
 
   return (
-    <button onClick={onOpen} className={`w-full flex items-center gap-3 p-3 ${completed ? 'bg-sage/10' : 'bg-white/50 hover:bg-white/70'} rounded-xl border ${completed ? 'border-sage/40' : 'border-terracotta/20'} transition-all text-left group`}>
+    <button onClick={onOpen} className={`w-full flex items-center gap-3 p-3 ${completed ? 'bg-sage/10' : 'bg-gradient-to-r from-white/60 to-white/30 backdrop-blur-sm shadow-sm hover:shadow-md'} rounded-xl border ${completed ? 'border-sage/40' : 'border-terracotta/20'} transition-all text-left group`}>
       <div className={`w-10 h-10 rounded-full ${completed ? 'bg-sage/30' : 'bg-terracotta/20 group-hover:bg-terracotta/30'} flex items-center justify-center flex-shrink-0 transition-colors`}>
         {completed ? <CheckCircle2 className="w-5 h-5 text-sage" /> : <UtensilsCrossed className="w-5 h-5 text-terracotta" />}
       </div>
@@ -825,7 +674,7 @@ function CompactRecipeCard({ item, onOpen }) {
 // Compact Media Card for Top Picks
 function CompactMediaCard({ item, onClick, getCategoryColor, getCategoryIcon }) {
   return (
-    <button onClick={onClick} className="w-full flex items-center gap-3 p-3 bg-white/50 hover:bg-white/70 rounded-xl border border-sage/20 transition-all text-left group">
+    <button onClick={onClick} className="w-full flex items-center gap-3 p-3 bg-gradient-to-r from-white/60 to-white/30 backdrop-blur-sm shadow-sm hover:shadow-md rounded-xl border border-sage/20 transition-all text-left group">
       <div className={`w-10 h-10 rounded-full ${getCategoryColor(item.category)} flex items-center justify-center flex-shrink-0`}>
         {getCategoryIcon(item.category)}
       </div>
@@ -897,6 +746,7 @@ export default function Home() {
   const [tooltipMessage, setTooltipMessage] = useState('')
   const [showTooltip, setShowTooltip] = useState(false)
   const [recommendations, setRecommendations] = useState([])
+  const [ytLoading, setYtLoading] = useState(false)
   const tooltipTimeoutRef = useRef(null)
 
   // Tracking stats state
@@ -916,14 +766,25 @@ export default function Home() {
 
   const currentMood = detectedMood || selectedMood || 'neutral'
 
+  const [topPicks, setTopPicks] = useState([])
+  const [moreOptions, setMoreOptions] = useState([])
+
   // Re-compute recommendations whenever selectedMood changes
   useEffect(() => {
-    const newRecommendations = getRecommendationsForMood(currentMood, detectedSignals)
-    setRecommendations(newRecommendations)
+    let cancelled = false
+    async function load() {
+      setYtLoading(true)
+      const result = await getRecommendations(currentMood, detectedSignals)
+      if (!cancelled) {
+        setRecommendations(result.allRecommendations)
+        setTopPicks(result.topPicks)
+        setMoreOptions(result.moreOptions)
+        setYtLoading(false)
+      }
+    }
+    load()
+    return () => { cancelled = true }
   }, [currentMood, detectedSignals])
-
-  const topPicks = getTopPicks(recommendations)
-  const moreOptions = recommendations.filter(r => !topPicks.find(tp => tp.id === r.id))
 
   // Trigger tooltip when action is completed
   const triggerTooltip = useCallback(() => {
@@ -956,9 +817,10 @@ export default function Home() {
   }, [])
 
   // Action complete callback
-  const onActionComplete = useCallback(() => {
+  const onActionComplete = useCallback((activity) => {
     triggerTooltip()
-  }, [triggerTooltip])
+    trackEvent({ event_name: 'activity_completed', mood: currentMood, meta: { activity: activity || 'unknown' } })
+  }, [triggerTooltip, currentMood])
 
   const handleMoodSelect = (moodId) => {
     setSelectedMood(moodId)
@@ -966,6 +828,7 @@ export default function Home() {
     setDetectedSignals([])
     setShowReply(false)
     setShowTopPicks(false)
+    trackEvent({ event_name: 'mood_selected', mood: moodId, meta: { source: 'ui' } })
   }
 
   const handleCheckInSubmit = () => {
@@ -984,11 +847,12 @@ export default function Home() {
     setSelectedMood(finalMood)
     setDetectedMood(finalMood)
     setDetectedSignals(signals)
+    trackEvent({ event_name: 'mood_selected', mood: finalMood, meta: { source: 'checkin' } })
 
     const thinkingTime = 600 + Math.random() * 300
-    setTimeout(() => {
-      const newRecs = getRecommendationsForMood(finalMood, signals)
-      const newTopPicks = getTopPicks(newRecs)
+    setTimeout(async () => {
+      const result = await getRecommendations(finalMood, signals)
+      const newTopPicks = result.topPicks
       const replyData = generateEnhancedNumaReply(finalMood, signals, newTopPicks, user?.name)
       setNumaReplyData(replyData)
       setIsThinking(false)
@@ -1046,55 +910,51 @@ export default function Home() {
     }
   }
 
-  // Full-size card renderer for grid
+  // Full-size card renderer for grid — compact, gradient-tinted, with type badges
   const renderCard = (item) => {
     switch (item.type) {
       case 'breathing': return (
-        <div key={item.id} className="bg-white rounded-2xl border border-sand hover:border-sage hover:shadow-lg transition-all hover:scale-[1.02] overflow-hidden">
-          <div className="p-4">
-            <div className="w-12 h-12 rounded-full bg-sage/20 flex items-center justify-center mb-3">
-              <Wind className="w-6 h-6 text-sage" />
+        <div key={item.id} className="bg-gradient-to-br from-white to-sage/8 rounded-2xl border border-sand/60 shadow-sm hover:shadow-md hover:border-sage/40 transition-all hover:scale-[1.01] overflow-hidden">
+          <div className="p-3">
+            <div className="flex items-center gap-2 mb-1.5">
+              <div className="w-8 h-8 rounded-lg bg-sage/20 flex items-center justify-center flex-shrink-0"><Wind className="w-4 h-4 text-sage" /></div>
+              <h3 className="text-earth font-medium text-sm truncate flex-1">{item.title}</h3>
             </div>
-            <h3 className="text-earth font-medium text-sm mb-1">{item.title}</h3>
-            <p className="text-earth-light text-xs mb-3">{item.subtitle}</p>
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-xs text-earth-light flex items-center gap-1">
-                <Timer className="w-3 h-3" /> {item.duration}s
-              </span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-sage/10 text-sage">Breathing</span>
+            <p className="text-earth-light text-xs line-clamp-1 mb-2">{item.subtitle}</p>
+            <div className="flex items-center gap-1.5 mb-2">
+              <span className="text-xs text-earth-light flex items-center gap-0.5"><Timer className="w-3 h-3" /> {item.duration}s</span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-sage/10 text-sage font-medium">Breathing</span>
             </div>
             <CompactBreathingCard item={item} onStart={() => {}} onTrackingUpdate={refreshStats} onActionComplete={onActionComplete} />
           </div>
         </div>
       )
       case 'micro': return (
-        <div key={item.id} className="bg-white rounded-2xl border border-sand hover:border-sage hover:shadow-lg transition-all hover:scale-[1.02] overflow-hidden">
-          <div className="p-4">
-            <div className="w-12 h-12 rounded-full bg-terracotta/20 flex items-center justify-center mb-3">
-              <Zap className="w-6 h-6 text-terracotta" />
+        <div key={item.id} className="bg-gradient-to-br from-white to-terracotta/8 rounded-2xl border border-sand/60 shadow-sm hover:shadow-md hover:border-sage/40 transition-all hover:scale-[1.01] overflow-hidden">
+          <div className="p-3">
+            <div className="flex items-center gap-2 mb-1.5">
+              <div className="w-8 h-8 rounded-lg bg-terracotta/20 flex items-center justify-center flex-shrink-0"><Zap className="w-4 h-4 text-terracotta" /></div>
+              <h3 className="text-earth font-medium text-sm truncate flex-1">{item.title}</h3>
             </div>
-            <h3 className="text-earth font-medium text-sm mb-1">{item.title}</h3>
-            <p className="text-earth-light text-xs line-clamp-2 mb-3">{item.instruction}</p>
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-xs text-earth-light flex items-center gap-1">
-                <Timer className="w-3 h-3" /> {item.duration}
-              </span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-terracotta/10 text-terracotta">Micro Action</span>
+            <p className="text-earth-light text-xs line-clamp-1 mb-2">{item.instruction}</p>
+            <div className="flex items-center gap-1.5 mb-2">
+              <span className="text-xs text-earth-light flex items-center gap-0.5"><Timer className="w-3 h-3" /> {item.duration}</span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-terracotta/10 text-terracotta font-medium">Quick Action</span>
             </div>
             <CompactMicroCard item={item} onTrackingUpdate={refreshStats} onActionComplete={onActionComplete} />
           </div>
         </div>
       )
       case 'journal': return (
-        <div key={item.id} className="bg-white rounded-2xl border border-sand hover:border-sage hover:shadow-lg transition-all hover:scale-[1.02] overflow-hidden">
-          <div className="p-4">
-            <div className="w-12 h-12 rounded-full bg-earth/20 flex items-center justify-center mb-3">
-              <PenLine className="w-6 h-6 text-earth" />
+        <div key={item.id} className="bg-gradient-to-br from-white to-earth/5 rounded-2xl border border-sand/60 shadow-sm hover:shadow-md hover:border-sage/40 transition-all hover:scale-[1.01] overflow-hidden">
+          <div className="p-3">
+            <div className="flex items-center gap-2 mb-1.5">
+              <div className="w-8 h-8 rounded-lg bg-earth/20 flex items-center justify-center flex-shrink-0"><PenLine className="w-4 h-4 text-earth" /></div>
+              <h3 className="text-earth font-medium text-sm truncate flex-1">{item.title}</h3>
             </div>
-            <h3 className="text-earth font-medium text-sm mb-1">{item.title}</h3>
-            <p className="text-earth-light text-xs italic line-clamp-2 mb-3">"{item.prompt}"</p>
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-earth/10 text-earth">Journal</span>
+            <p className="text-earth-light text-xs italic line-clamp-1 mb-2">"{item.prompt}"</p>
+            <div className="flex items-center gap-1.5 mb-2">
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-earth/10 text-earth font-medium">Journal</span>
             </div>
             <CompactJournalCard item={item} onTrackingUpdate={refreshStats} onActionComplete={onActionComplete} />
           </div>
@@ -1102,45 +962,49 @@ export default function Home() {
       )
       case 'info': return null
       case 'recipe': return (
-        <div key={item.id} className="bg-white rounded-2xl border border-sand hover:border-sage hover:shadow-lg transition-all hover:scale-[1.02] overflow-hidden">
-          <div className="p-4">
-            <div className="w-12 h-12 rounded-full bg-terracotta/20 flex items-center justify-center mb-3">
-              <UtensilsCrossed className="w-6 h-6 text-terracotta" />
+        <div key={item.id} className="bg-gradient-to-br from-white to-orange-50/40 rounded-2xl border border-sand/60 shadow-sm hover:shadow-md hover:border-sage/40 transition-all hover:scale-[1.01] overflow-hidden">
+          <div className="p-3">
+            <div className="flex items-center gap-2 mb-1.5">
+              <div className="w-8 h-8 rounded-lg bg-terracotta/20 flex items-center justify-center flex-shrink-0"><UtensilsCrossed className="w-4 h-4 text-terracotta" /></div>
+              <h3 className="text-earth font-medium text-sm truncate flex-1">{item.title}</h3>
             </div>
-            <h3 className="text-earth font-medium text-sm mb-1">{item.title}</h3>
-            <p className="text-earth-light text-xs line-clamp-1 mb-3">{item.subtitle}</p>
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-terracotta/10 text-terracotta">Recipe</span>
-            </div>
-            <button onClick={() => { setSelectedRecipe(item); setRecipeModalOpen(true) }} className="w-full py-2 px-3 text-xs font-medium rounded-lg bg-terracotta/10 text-terracotta hover:bg-terracotta/20 transition-colors">
-              View Recipe
-            </button>
-          </div>
-        </div>
-      )
-      case 'media': default:
-        return (
-          <div key={item.id} className="bg-white rounded-2xl border border-sand hover:border-sage hover:shadow-lg transition-all hover:scale-[1.02] overflow-hidden">
-            <div className="p-4">
-              <div className={`w-12 h-12 rounded-full ${getCategoryColor(item.category)} flex items-center justify-center mb-3`}>
-                {getCategoryIcon(item.category)}
-              </div>
-              <h3 className="text-earth font-medium text-sm line-clamp-1 mb-1">{item.title}</h3>
-              <p className="text-earth-light text-xs line-clamp-1 mb-3">{item.subtitle}</p>
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-xs text-earth-light flex items-center gap-1">
-                  <Clock className="w-3 h-3" /> {item.duration}
-                </span>
-                <span className={`text-[10px] px-2 py-0.5 rounded-full ${item.platform === 'youtube' ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'}`}>
-                  {item.platform === 'youtube' ? 'YouTube' : 'Spotify'}
-                </span>
-              </div>
-              <button onClick={() => handleRecommendationClick(item)} className={`w-full py-2 px-3 text-xs font-medium rounded-lg transition-colors ${item.platform === 'youtube' ? 'bg-red-100 text-red-600 hover:bg-red-200' : 'bg-green-100 text-green-600 hover:bg-green-200'}`}>
-                {item.platform === 'youtube' ? 'Play Video' : 'Listen Now'}
+            <p className="text-earth-light text-xs line-clamp-1 mb-2">{item.subtitle}</p>
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-orange-100 text-orange-600 font-medium">Recipe</span>
+              <button onClick={() => { setSelectedRecipe(item); setRecipeModalOpen(true) }} className="px-2.5 py-1 text-xs font-medium rounded-lg bg-terracotta/10 text-terracotta hover:bg-terracotta/20 transition-colors">
+                View
               </button>
             </div>
           </div>
+        </div>
+      )
+      case 'media': default: {
+        const isYouTube = item.platform === 'youtube'
+        return (
+          <div key={item.id} className={`bg-gradient-to-br ${isYouTube ? 'from-white to-red-50/40' : 'from-white to-green-50/40'} rounded-2xl border border-sand/60 shadow-sm hover:shadow-md hover:border-sage/40 transition-all hover:scale-[1.01] overflow-hidden`}>
+            <div className="p-3">
+              <div className="flex items-center gap-2 mb-1.5">
+                <div className={`w-8 h-8 rounded-lg ${getCategoryColor(item.category)} flex items-center justify-center flex-shrink-0`}>
+                  {getCategoryIcon(item.category)}
+                </div>
+                <h3 className="text-earth font-medium text-sm truncate flex-1">{item.title}</h3>
+              </div>
+              <p className="text-earth-light text-xs line-clamp-1 mb-2">{item.subtitle}</p>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs text-earth-light flex items-center gap-0.5"><Clock className="w-3 h-3" /> {item.duration}</span>
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${isYouTube ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'}`}>
+                    {isYouTube ? 'YouTube' : 'Spotify'}
+                  </span>
+                </div>
+                <button onClick={() => handleRecommendationClick(item)} className={`px-2.5 py-1 text-xs font-medium rounded-lg transition-colors ${isYouTube ? 'bg-red-100 text-red-600 hover:bg-red-200' : 'bg-green-100 text-green-600 hover:bg-green-200'}`}>
+                  {isYouTube ? 'Play' : 'Listen'}
+                </button>
+              </div>
+            </div>
+          </div>
         )
+      }
     }
   }
 
@@ -1240,7 +1104,10 @@ export default function Home() {
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-medium text-earth">Recommended for You <span className="text-xs bg-sage/10 text-sage px-2 py-1 rounded-full capitalize ml-2">{getMoodEmoji(currentMood)} {currentMood}</span></h2>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {ytLoading && (
+            <p className="text-xs text-earth-light/60 mb-2 animate-pulse">Finding fresh videos for you...</p>
+          )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {(showTopPicks ? moreOptions : recommendations).map(item => renderCard(item))}
           </div>
         </div>
