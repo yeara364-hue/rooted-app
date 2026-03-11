@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useUser } from '../context/UserContext'
 import { ArrowRight, Sun, Moon, Sunrise } from 'lucide-react'
@@ -63,11 +63,11 @@ async function trackEvent(event_name, moodValue, energyValue) {
 }
 
 
-  // If already checked in today, go to recommendations
-  if (todayCheckIn) {
-    navigate('/recommendations')
-    return null
-  }
+  useEffect(() => {
+    if (todayCheckIn && mood) {
+      navigate('/recommendations')
+    }
+  }, [todayCheckIn, mood, navigate])
 
   const handleSubmit = async () => {
   try {
@@ -111,7 +111,7 @@ async function trackEvent(event_name, moodValue, energyValue) {
                 {MOODS.map((m) => (
                   <button
                     key={m.id}
-                    onClick={() => setMood(m.id)}
+                    onClick={() => { setMood(m.id); navigate('/recommendations', { state: { moodId: m.id } }) }}
                     className={`flex flex-col items-center p-4 rounded-2xl border-2 transition-all min-w-[80px] ${
                       mood === m.id
                         ? 'border-sage bg-sage-light/20 scale-105'

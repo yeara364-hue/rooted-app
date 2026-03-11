@@ -873,11 +873,7 @@ export default function Home() {
   const moreOptions = recommendations.filter(r => !topPicks.find(tp => tp.id === r.id))
 
   const handleMoodSelect = (moodId) => {
-    setSelectedMood(moodId)
-    setDetectedMood(moodId)
-    setDetectedSignals([])
-    setShowReply(false)
-    setShowTopPicks(false)
+    navigate(`/mood/${moodId}`)
   }
 
   const handleCheckInSubmit = () => {

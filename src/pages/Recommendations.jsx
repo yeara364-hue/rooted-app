@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useUser } from '../context/UserContext'
 import { generateNumaResponse, generateNumaReply } from '../lib/ai'
 import Numa from '../components/Numa'
@@ -26,7 +26,9 @@ const ACTIVITY_ICONS = {
 
 export default function Recommendations() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { user, todayCheckIn, recordUserMessage, getNumaInsights, getNumaMemoryContext } = useUser()
+  const activeMood = location.state?.moodId || todayCheckIn?.mood
   const [numaResponse, setNumaResponse] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -44,12 +46,12 @@ export default function Recommendations() {
   const insights = getNumaInsights()
 
   useEffect(() => {
-    if (!todayCheckIn) {
+    if (!activeMood) {
       navigate('/checkin')
       return
     }
     loadRecommendations()
-  }, [todayCheckIn, navigate])
+  }, [activeMood, navigate])
 
   const loadRecommendations = async () => {
     setLoading(true)
@@ -67,8 +69,8 @@ export default function Recommendations() {
 
       const result = await generateNumaResponse({
         name: user.name,
-        mood: todayCheckIn.mood,
-        energy: todayCheckIn.energy,
+        mood: activeMood,
+        energy: todayCheckIn?.energy,
         goals: user.goals,
         experience: user.experience,
         memoryInsights
@@ -108,8 +110,8 @@ export default function Recommendations() {
       // Get Numa's reply with memory context
       const memoryInsights = getNumaInsights()
       const reply = await generateNumaReply(message, {
-        mood: todayCheckIn.mood,
-        energy: todayCheckIn.energy,
+        mood: activeMood,
+        energy: todayCheckIn?.energy,
         hasHistory: memoryInsights.hasHistory
       })
 
@@ -148,7 +150,7 @@ export default function Recommendations() {
   if (loading) {
     return (
       <div className="min-h-screen bg-cream flex flex-col items-center justify-center p-6">
-        <Numa mood={todayCheckIn?.mood || 'okay'} state="thinking" size={100} />
+        <Numa mood={activeMood || 'okay'} state="thinking" size={100} />
         <p className="text-earth-light mt-6">Loading...</p>
       </div>
     )
@@ -196,7 +198,7 @@ export default function Recommendations() {
         {/* Numa */}
         <div className="mb-6">
           <Numa
-            mood={todayCheckIn?.mood || 'okay'}
+            mood={activeMood || 'okay'}
             state={numaState}
             size={isInConversation ? 100 : 120}
           />

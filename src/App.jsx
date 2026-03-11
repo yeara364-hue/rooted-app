@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { UserProvider, useUser } from './context/UserContext'
 import Welcome from './pages/Welcome'
 import Onboarding from './pages/Onboarding'
@@ -6,6 +6,7 @@ import Login from './pages/Login'
 import Home from './pages/Home'
 import CheckIn from './pages/CheckIn'
 import Recommendations from './pages/Recommendations'
+import MoodPage from './pages/MoodPage'
 import Settings from './pages/Settings'
 import NotificationSettings from './pages/NotificationSettings'
 import BottomNav from './components/BottomNav'
@@ -90,6 +91,11 @@ function AppRoutes() {
             <Recommendations />
           </ProtectedRoute>
         } />
+        <Route path="/mood/:mood" element={
+          <ProtectedRoute>
+            <MoodPage />
+          </ProtectedRoute>
+        } />
         <Route path="/settings" element={
           <ProtectedRoute>
             <Settings />
@@ -110,11 +116,9 @@ function AppRoutes() {
 
 function App() {
   return (
-    <BrowserRouter>
-      <UserProvider>
-        <AppRoutes />
-      </UserProvider>
-    </BrowserRouter>
+    <UserProvider>
+      <AppRoutes />
+    </UserProvider>
   )
 }
 
