@@ -35,11 +35,11 @@ function setCached(key, data) {
 // ── Keyword mapping per mood ──────────────────────────────────────────────────
 
 const MOOD_KEYWORDS = {
-  stressed:  'yoga meditation breathwork sound bath wellness',
-  sad:       'meditation mindfulness sound bath community',
-  tired:     'gentle yoga restorative stretching',
-  angry:     'yoga breathwork power vinyasa',
-  happy:     'dance yoga community wellness',
+  stressed:  'yoga meditation breathwork sound bath mindfulness pilates tai chi relaxation wellness workshop retreat class',
+  sad:       'meditation mindfulness sound bath healing yoga wellness workshop community movement stretching relaxation class',
+  tired:     'yoga stretching restorative pilates tai chi qigong relaxation movement wellness healing class',
+  angry:     'yoga breathwork movement fitness pilates tai chi qigong wellness workshop class retreat',
+  happy:     'yoga dance fitness movement wellness workshop community retreat class pilates mindfulness',
 }
 
 const CORS_HEADERS = {
@@ -55,7 +55,7 @@ export const handler = async (event) => {
     return { statusCode: 200, headers: CORS_HEADERS, body: '' }
   }
 
-  const { mood, lat, lng, keywords } = event.queryStringParameters || {}
+  const { mood, lat, lng, keywords, radius: radiusParam } = event.queryStringParameters || {}
 
   if (!lat || !lng) {
     return {
@@ -75,7 +75,8 @@ export const handler = async (event) => {
     }
   }
 
-  const cacheKey = `events:${mood}:${parseFloat(lat).toFixed(2)}:${parseFloat(lng).toFixed(2)}`
+  const radius = radiusParam || '20'
+  const cacheKey = `events:${mood}:${parseFloat(lat).toFixed(2)}:${parseFloat(lng).toFixed(2)}:${radius}`
   const cached = getCached(cacheKey)
   if (cached) {
     console.log('nearby-events: cache HIT for', cacheKey)
@@ -99,18 +100,18 @@ export const handler = async (event) => {
 
   const now = new Date().toISOString().slice(0, 19) + 'Z'
 
-  const params = new URLSearchParams({
+  const tmParams = new URLSearchParams({
     apikey: apiKey,
     keyword,
     latlong: `${parseFloat(lat).toFixed(6)},${parseFloat(lng).toFixed(6)}`,
-    radius: '20',
+    radius,
     unit: 'km',
     size: '10',
     sort: 'date,asc',
     startDateTime: now,
   })
 
-  const url = `https://app.ticketmaster.com/discovery/v2/events.json?${params}`
+  const url = `https://app.ticketmaster.com/discovery/v2/events.json?${tmParams}`
   console.log('nearby-events: fetching Ticketmaster —', url.replace(apiKey, '***'))
 
   const controller = new AbortController()
@@ -163,7 +164,21 @@ export const handler = async (event) => {
   const rawEvents = data?._embedded?.events || []
   console.log('nearby-events: raw events from Ticketmaster:', rawEvents.length)
 
-  const events = rawEvents.slice(0, 5).map(e => {
+  // Keep only physical events — filter out virtual/online and events with no venue coordinates
+  const physicalEvents = rawEvents.filter(e => {
+    const venue = e._embedded?.venues?.[0] || {}
+    const vLat = parseFloat(venue.location?.latitude)
+    const vLng = parseFloat(venue.location?.longitude)
+    if (!Number.isFinite(vLat) || !Number.isFinite(vLng)) return false
+    const nameLC = (e.name || '').toLowerCase()
+    const venueNameLC = (venue.name || '').toLowerCase()
+    if (/\bonline\b|\bvirtual\b|\bstreaming\b/.test(nameLC)) return false
+    if (/\bonline\b|\bvirtual\b/.test(venueNameLC)) return false
+    return true
+  })
+  console.log('nearby-events: physical events after filtering:', physicalEvents.length, 'of', rawEvents.length)
+
+  const events = physicalEvents.slice(0, 5).map(e => {
     const venue = e._embedded?.venues?.[0] || {}
     const venueLat = parseFloat(venue.location?.latitude)
     const venueLng = parseFloat(venue.location?.longitude)

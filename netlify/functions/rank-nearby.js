@@ -92,17 +92,18 @@ Return ONLY valid JSON — an array of exactly up to 3 objects:
 
 Never invent items. Only use indices from the list above.`
 
+  const siteUrl = process.env.URL || 'https://rooted.app'
   console.log('rank-nearby: sending request to OpenRouter AI...')
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${apiKey}`,
-      'HTTP-Referer': 'http://localhost:8888',
+      'HTTP-Referer': siteUrl,
       'X-Title': 'Rooted',
     },
     body: JSON.stringify({
-      model: 'openrouter/free',
+      model: 'mistralai/mistral-7b-instruct:free',
       messages: [{ role: 'user', content: prompt }],
       max_tokens: 300,
     }),
@@ -163,17 +164,12 @@ exports.handler = async function (event) {
   }
 
   try {
-    const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), 6000)
-
     const ranked = await Promise.race([
       aiRank(items, mood, apiKey),
       new Promise((_, reject) =>
         setTimeout(() => reject(new Error('AI ranking timed out')), 6000)
       ),
     ])
-
-    clearTimeout(timeout)
     console.log('rank-nearby: using OpenRouter AI')
     console.log('rank-nearby: AI returned', ranked.length, 'ranked items')
     console.log('rank-nearby: final ranked result (AI):', JSON.stringify(ranked, null, 2))

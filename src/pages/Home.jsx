@@ -210,6 +210,56 @@ const moodContent = {
   }
 }
 
+// Unsplash image map — keyed by content item ID
+const ITEM_IMAGES = {
+  // ── Move your body ────────────────────────────────────────────────────────
+  's3':  'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400&q=80', // yoga outdoor sun
+  'sd3': 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&q=80', // forest path walk
+  't3':  'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=400&q=80', // gentle floor yoga
+  'a3':  'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&q=80', // yoga flow studio
+  'h3':  'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&q=80',    // sunrise yoga pose
+  'n3':  'https://images.unsplash.com/photo-1545389336-cf090694435a?w=400&q=80',    // daily yoga soft
+  // ── Calm your mind ───────────────────────────────────────────────────────
+  's1':  'https://images.unsplash.com/photo-1508672019048-805c876b67e2?w=400&q=80', // meditation beach
+  'sd1': 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=400&q=80', // self-compassion
+  't1':  'https://images.unsplash.com/photo-1447752741948-09b73cd5c2c4?w=400&q=80', // forest stillness
+  'a1':  'https://images.unsplash.com/photo-1486218119243-13883505764c?w=400&q=80', // open field calm
+  'h1':  'https://images.unsplash.com/photo-1508615039623-a25605d2b022?w=400&q=80', // gratitude light
+  'n1':  'https://images.unsplash.com/photo-1515023115689-589c33041d3c?w=400&q=80', // calm water
+  's2':  'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&q=80', // headphones listening
+  'sd2': 'https://images.unsplash.com/photo-1520333789090-1afc82db536a?w=400&q=80', // warm music room
+  't2':  'https://images.unsplash.com/photo-1534082021195-09db37f8c4e9?w=400&q=80', // sleep ambient
+  'a2':  'https://images.unsplash.com/photo-1418065460487-3e41a6d18738?w=400&q=80', // nature sounds forest
+  'h2':  'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&q=80', // joyful music
+  'n2':  'https://images.unsplash.com/photo-1434030216411-0b5bf851f9ea?w=400&q=80', // lo-fi desk window
+  // ── Reflect ──────────────────────────────────────────────────────────────
+  's6':  'https://images.unsplash.com/photo-1455390582262-044cdead277a?w=400&q=80', // pen on paper
+  'sd6': 'https://images.unsplash.com/photo-1501618669935-18b6ecceee58?w=400&q=80', // warm journal window
+  't6':  'https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=400&q=80', // notebook morning
+  'a6':  'https://images.unsplash.com/photo-1517842645780-f73ac4182bc4?w=400&q=80', // writing warm light
+  'h6':  'https://images.unsplash.com/photo-1501618669935-18b6ecceee58?w=400&q=80', // open journal
+  'n6':  'https://images.unsplash.com/photo-1455390582262-044cdead277a?w=400&q=80', // blank notebook
+  // ── Quick reset (breathing + micro) ─────────────────────────────────────
+  's7':  'https://images.unsplash.com/photo-1474418397713-7ede21d49118?w=400&q=80', // mountain reflection
+  'sd7': 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80', // ocean calm
+  't7':  'https://images.unsplash.com/photo-1447752741948-09b73cd5c2c4?w=400&q=80', // night forest
+  'a7':  'https://images.unsplash.com/photo-1515023115689-589c33041d3c?w=400&q=80', // cool still water
+  'h7':  'https://images.unsplash.com/photo-1508615039623-a25605d2b022?w=400&q=80', // sunrise energy
+  'n7':  'https://images.unsplash.com/photo-1474418397713-7ede21d49118?w=400&q=80', // balance still lake
+  's4':  'https://images.unsplash.com/photo-1508672019048-805c876b67e2?w=400&q=80', // shoulder release
+  's5':  'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&q=80', // grounding nature
+  'sd4': 'https://images.unsplash.com/photo-1543218024-57a70143bdc9?w=400&q=80',    // warm tea hands
+  'sd5': 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=400&q=80', // hand on heart
+  't4':  'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=400&q=80', // eye rest soft
+  't5':  'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=400&q=80', // restorative pose
+  'a4':  'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80', // cold water focus
+  'a5':  'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400&q=80', // standing strong
+  'h4':  'https://images.unsplash.com/photo-1517842645780-f73ac4182bc4?w=400&q=80', // joy writing
+  'h5':  'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400&q=80', // connection warmth
+  'n4':  'https://images.unsplash.com/photo-1515023115689-589c33041d3c?w=400&q=80', // mindful present
+  'n5':  'https://images.unsplash.com/photo-1543218024-57a70143bdc9?w=400&q=80',    // gratitude pause
+}
+
 // Calculate relevance score for an item based on mood and signals
 function calculateRelevance(item, mood, signals) {
   let score = item.relevanceBase || 5
@@ -306,12 +356,112 @@ function generateEnhancedNumaReply(mood, signals, topPicks, userName) {
 }
 
 const moodOptions = [
-  { id: 'happy', emoji: '😊', label: 'Happy' },
-  { id: 'sad', emoji: '😢', label: 'Sad' },
-  { id: 'stressed', emoji: '😰', label: 'Stressed' },
-  { id: 'tired', emoji: '😴', label: 'Tired' },
-  { id: 'angry', emoji: '😠', label: 'Angry' }
+  { id: 'happy', label: 'Happy' },
+  { id: 'sad', label: 'Sad' },
+  { id: 'stressed', label: 'Stressed' },
+  { id: 'tired', label: 'Tired' },
+  { id: 'angry', label: 'Angry' },
 ]
+
+// Soft 3D sphere face icons — warm beige gradient, minimal features, premium wellness feel
+const MoodFace = ({ id, size = 48 }) => {
+  const gId = `mf-${id}`
+  const vb = '0 0 52 52'
+  const fc = '#7a6858'   // feature colour — warm dark brown
+  const sw = '1.8'       // stroke width
+
+  // Shared sphere: radial gradient sphere + highlight
+  const Sphere = () => (
+    <>
+      <defs>
+        <radialGradient id={gId} cx="36%" cy="28%" r="72%" gradientUnits="objectBoundingBox">
+          <stop offset="0%"   stopColor="#e8ddd0" />
+          <stop offset="48%"  stopColor="#d2c4b2" />
+          <stop offset="100%" stopColor="#b8ad9e" />
+        </radialGradient>
+        <filter id={`sh-${id}`} x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="1.5" stdDeviation="2" floodColor="rgba(0,0,0,0.13)" />
+        </filter>
+      </defs>
+      {/* Sphere body */}
+      <circle cx="26" cy="26" r="23" fill={`url(#${gId})`} filter={`url(#sh-${id})`} />
+      {/* Soft specular highlight */}
+      <ellipse cx="18" cy="16" rx="7.5" ry="4.5" fill="rgba(255,255,255,0.30)" />
+    </>
+  )
+
+  switch (id) {
+    case 'happy': return (
+      <svg width={size} height={size} viewBox={vb} fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <Sphere />
+        {/* Closed-eye crescents curving upward */}
+        <path d="M14 24 Q18 19 22 24" stroke={fc} strokeWidth={sw} />
+        <path d="M30 24 Q34 19 38 24" stroke={fc} strokeWidth={sw} />
+        {/* Wide gentle smile */}
+        <path d="M14 31 Q26 40 38 31" stroke={fc} strokeWidth={sw} />
+      </svg>
+    )
+    case 'sad': return (
+      <svg width={size} height={size} viewBox={vb} fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <Sphere />
+        {/* Downward slanting brows */}
+        <path d="M14 19 L21 22" stroke={fc} strokeWidth={sw} />
+        <path d="M38 19 L31 22" stroke={fc} strokeWidth={sw} />
+        {/* Small dot eyes */}
+        <circle cx="19" cy="25" r="1.6" fill={fc} />
+        <circle cx="33" cy="25" r="1.6" fill={fc} />
+        {/* Frown */}
+        <path d="M16 35 Q26 28 36 35" stroke={fc} strokeWidth={sw} />
+        {/* Tear */}
+        <path d="M17 28 Q15 32 17 33 Q19 33 19 31 Q19 28 17 28" fill={fc} opacity="0.38" />
+      </svg>
+    )
+    case 'stressed': return (
+      <svg width={size} height={size} viewBox={vb} fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <Sphere />
+        {/* Worried inward brows */}
+        <path d="M14 21 L21 24" stroke={fc} strokeWidth={sw} />
+        <path d="M38 21 L31 24" stroke={fc} strokeWidth={sw} />
+        {/* Squinting eyes */}
+        <path d="M14 27 Q18 24 22 27" stroke={fc} strokeWidth={sw} />
+        <path d="M30 27 Q34 24 38 27" stroke={fc} strokeWidth={sw} />
+        {/* Wavy tense mouth */}
+        <path d="M15 34 Q19 31 23 34 Q27 37 31 34 Q35 31 37 34" stroke={fc} strokeWidth={sw} />
+        {/* Sweat drop */}
+        <path d="M39 13 Q41 17 39 19 Q37 19 37 17 Q37 13 39 13" fill={fc} opacity="0.32" />
+      </svg>
+    )
+    case 'tired': return (
+      <svg width={size} height={size} viewBox={vb} fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <Sphere />
+        {/* Heavy drooping eyelid arcs */}
+        <path d="M13 23 Q18 18 23 23" stroke={fc} strokeWidth={sw} />
+        <path d="M13 25 Q18 25 23 25" stroke={fc} strokeWidth="1.1" opacity="0.45" />
+        <path d="M29 23 Q34 18 39 23" stroke={fc} strokeWidth={sw} />
+        <path d="M29 25 Q34 25 39 25" stroke={fc} strokeWidth="1.1" opacity="0.45" />
+        {/* Slightly downturned flat mouth */}
+        <path d="M18 34 Q26 36 34 34" stroke={fc} strokeWidth={sw} />
+        {/* zz */}
+        <text x="32" y="17" fontSize="7.5" fill={fc} opacity="0.50"
+              fontFamily="Georgia, serif" fontStyle="italic" fontWeight="400">zz</text>
+      </svg>
+    )
+    case 'angry': return (
+      <svg width={size} height={size} viewBox={vb} fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <Sphere />
+        {/* Sharp furrowed brows angled steeply */}
+        <path d="M12 19 L23 25" stroke={fc} strokeWidth="2.2" />
+        <path d="M40 19 L29 25" stroke={fc} strokeWidth="2.2" />
+        {/* Small tight eyes */}
+        <circle cx="19" cy="28" r="1.5" fill={fc} />
+        <circle cx="33" cy="28" r="1.5" fill={fc} />
+        {/* Tight frown */}
+        <path d="M17 37 Q26 30 35 37" stroke={fc} strokeWidth={sw} />
+      </svg>
+    )
+    default: return null
+  }
+}
 
 // Recipe Modal Component
 function RecipeModal({ recipe, isOpen, onClose, onTrackingUpdate }) {
@@ -982,206 +1132,487 @@ export default function Home() {
     }
   }
 
-  return (
-    <div className="min-h-screen bg-cream flex flex-col pb-20">
-      {/* Header */}
-      <div className="p-6 pb-4">
-        <p className="text-earth-light text-sm">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
-        <h1 className="text-2xl font-semibold text-earth mt-1">{getGreeting()}, {user?.name}</h1>
-        {insights.streakDays >= 2 && (
-          <div className="inline-flex items-center gap-1.5 mt-3 bg-terracotta/10 text-terracotta px-3 py-1.5 rounded-full">
-            <Flame className="w-4 h-4" /><span className="text-sm font-medium">{insights.streakDays} day streak!</span>
+  // Per-mood pill colors
+  const moodPillStyles = {
+    happy:    { default: 'bg-amber-50 border-amber-200',   active: 'bg-amber-100 border-amber-300 shadow-md scale-105' },
+    sad:      { default: 'bg-sky-50 border-sky-200',       active: 'bg-sky-100 border-sky-300 shadow-md scale-105' },
+    stressed: { default: 'bg-violet-50 border-violet-200', active: 'bg-violet-100 border-violet-300 shadow-md scale-105' },
+    tired:    { default: 'bg-slate-50 border-slate-200',   active: 'bg-slate-100 border-slate-300 shadow-md scale-105' },
+    angry:    { default: 'bg-rose-50 border-rose-200',     active: 'bg-rose-100 border-rose-300 shadow-md scale-105' },
+  }
+
+  // Mood-keyed header gradients for the featured card
+  const moodHeaderGradient = {
+    stressed: 'from-violet-100 to-violet-50',
+    sad:      'from-sky-100 to-sky-50',
+    tired:    'from-slate-100 to-slate-50',
+    angry:    'from-rose-100 to-rose-50',
+    happy:    'from-amber-100 to-amber-50',
+    neutral:  'from-sage/20 to-sage/5',
+  }
+
+  // Large editorial hero card — shown as the primary recommendation
+  const renderFeaturedCard = (item) => {
+    const headerGrad = moodHeaderGradient[currentMood] || moodHeaderGradient.neutral
+
+    if (item.type === 'media') {
+      const isYoutube = item.platform === 'youtube'
+      const btnClass = isYoutube ? 'bg-red-400 hover:bg-red-500' : 'bg-[#1DB954] hover:bg-green-600'
+      return (
+        <button
+          onClick={() => handleRecommendationClick(item)}
+          className="w-full rounded-2xl overflow-hidden shadow-md text-left mb-4 hover:shadow-lg transition-all duration-300 border border-white/70"
+        >
+          {/* Visual header */}
+          <div className={`h-28 bg-gradient-to-br ${headerGrad} flex items-end justify-between px-4 pb-4 relative overflow-hidden`}>
+            <div className="absolute -right-8 -top-8 w-36 h-36 rounded-full bg-white/20 pointer-events-none" />
+            <div className="absolute right-6 top-4 w-14 h-14 rounded-full bg-white/12 pointer-events-none" />
+            <div className={`w-11 h-11 rounded-xl ${getCategoryColor(item.category)} flex items-center justify-center shadow-md`}>
+              <Play className="w-5 h-5 text-cream" />
+            </div>
+            <div className="absolute top-3 right-3 bg-white/70 backdrop-blur-sm rounded-full px-2.5 py-0.5">
+              <span className="text-[10px] text-earth font-medium">{item.duration}</span>
+            </div>
           </div>
-        )}
+          {/* Content */}
+          <div className="bg-white/70 backdrop-blur-sm px-4 py-3">
+            <p className="text-earth font-semibold text-[13px] leading-tight">{item.title}</p>
+            <p className="text-earth-light/70 text-xs font-light mt-0.5 line-clamp-1">{item.subtitle}</p>
+            <div className="mt-2">
+              <span className={`inline-flex items-center gap-1 ${btnClass} text-white text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-sm transition-colors`}>
+                <Play className="w-2.5 h-2.5 fill-current" />
+                {isYoutube ? 'Watch now' : 'Listen now'}
+              </span>
+            </div>
+          </div>
+        </button>
+      )
+    }
+
+    // Non-media: editorial wrapper with a colored header strip
+    const typeLabel = item.type === 'breathing' ? 'Breathwork'
+      : item.type === 'micro' ? 'Quick reset'
+      : item.type === 'journal' ? 'Journaling'
+      : 'Practice'
+    return (
+      <div className="rounded-2xl overflow-hidden shadow-sm mb-4 border border-white/70">
+        <div className={`h-10 bg-gradient-to-br ${headerGrad} flex items-center px-4`}>
+          <p className="text-earth text-[9px] uppercase tracking-[0.14em] font-medium opacity-40">{typeLabel}</p>
+        </div>
+        <div className="bg-white/70 backdrop-blur-sm">
+          {renderCompactCard(item)}
+        </div>
+      </div>
+    )
+  }
+
+  // Secondary tile — 2-column, visually distinct
+  const renderSecondaryCard = (item) => {
+    const handleItemClick = () => {
+      if (item.type === 'recipe') { setSelectedRecipe(item); setRecipeModalOpen(true) }
+      else if (item.type === 'media') handleRecommendationClick(item)
+      else navigate(`/mood/${currentMood}`)
+    }
+    const iconBg = item.type === 'media' ? getCategoryColor(item.category)
+      : item.type === 'breathing' ? 'bg-sage'
+      : item.type === 'micro'     ? 'bg-terracotta'
+      : item.type === 'journal'   ? 'bg-earth'
+      : 'bg-sage'
+    const iconEl = item.type === 'media' ? <Play className="w-4 h-4 text-cream" />
+      : item.type === 'breathing' ? <Wind className="w-4 h-4 text-cream" />
+      : item.type === 'micro'     ? <Zap className="w-4 h-4 text-cream" />
+      : item.type === 'journal'   ? <PenLine className="w-4 h-4 text-cream" />
+      : <Sparkles className="w-4 h-4 text-cream" />
+    const cta = item.type === 'media' ? (item.platform === 'youtube' ? 'Watch →' : 'Listen →')
+      : item.type === 'breathing' ? 'Breathe →'
+      : item.type === 'micro'     ? 'Do it →'
+      : item.type === 'journal'   ? 'Write →'
+      : 'Begin →'
+    const durationText = typeof item.duration === 'number' ? `${item.duration}s` : item.duration || ''
+    return (
+      <button
+        key={item.id}
+        onClick={handleItemClick}
+        className="w-full bg-white/65 rounded-2xl p-3 border border-white/80 shadow-sm text-left hover:shadow-md transition-all duration-200"
+      >
+        <div className={`w-7 h-7 rounded-lg ${iconBg} flex items-center justify-center mb-2 shadow-sm`}>
+          {iconEl}
+        </div>
+        <p className="text-earth text-[12px] font-semibold leading-snug line-clamp-2">{item.title}</p>
+        {durationText && <p className="text-earth-light/45 text-[10px] mt-0.5">{durationText}</p>}
+        <p className="text-sage text-[10px] font-medium mt-2">{cta}</p>
+      </button>
+    )
+  }
+
+  // ── Intent-based content sections ─────────────────────────────────────────
+  // Current mood surfaces first; other moods provide variety
+  const intentMoods = [
+    currentMood,
+    ...['stressed', 'sad', 'tired', 'angry', 'happy', 'neutral'].filter(m => m !== currentMood),
+  ]
+  const dedupe = (arr) => arr.filter((item, idx, a) => a.findIndex(i => i.id === item.id) === idx)
+
+  const sectionMove = dedupe(
+    intentMoods.flatMap(m => (moodContent[m]?.media || []).filter(i => i.category === 'yoga' || i.category === 'movement'))
+  ).slice(0, 6)
+
+  const sectionCalm = dedupe(
+    intentMoods.flatMap(m => (moodContent[m]?.media || []).filter(i => i.category === 'meditation' || i.category === 'music'))
+  ).slice(0, 6)
+
+  const sectionReflect = dedupe(
+    intentMoods.map(m => moodContent[m]?.journal).filter(Boolean)
+  ).slice(0, 5)
+
+  const sectionReset = dedupe(
+    intentMoods.flatMap(m => [moodContent[m]?.breathing, ...(moodContent[m]?.microActions || [])].filter(Boolean))
+  ).slice(0, 6)
+
+  // Image-first card for horizontal section rows
+  const renderSmallCard = (item) => {
+    const handleClick = () => {
+      if (item.type === 'recipe') { setSelectedRecipe(item); setRecipeModalOpen(true) }
+      else if (item.type === 'media') handleRecommendationClick(item)
+      else navigate(`/mood/${currentMood}`)
+    }
+    const imageUrl = ITEM_IMAGES[item.id]
+    const cta = item.type === 'media'
+      ? (item.platform === 'youtube' ? 'Watch' : 'Listen')
+      : item.type === 'breathing' ? 'Start'
+      : item.type === 'micro'     ? 'Do it'
+      : item.type === 'journal'   ? 'Write'
+      : 'Begin'
+    const durationText = typeof item.duration === 'number' ? `${item.duration}s` : item.duration || ''
+    const platformLabel = item.type === 'media'
+      ? (item.platform === 'youtube' ? 'YT' : '♫')
+      : null
+
+    // Fallback gradient when no image available
+    const fallbackGrad = item.type === 'media' && item.category === 'music'
+      ? 'from-emerald-100 to-teal-50'
+      : item.type === 'breathing' ? 'from-sage/30 to-sage/10'
+      : item.type === 'micro'     ? 'from-terracotta/20 to-orange-50'
+      : item.type === 'journal'   ? 'from-earth/20 to-amber-50'
+      : 'from-violet-100 to-violet-50'
+
+    return (
+      <button
+        key={item.id}
+        onClick={handleClick}
+        className="flex-shrink-0 w-48 rounded-2xl overflow-hidden shadow-md bg-white text-left hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
+      >
+        {/* Image — ~60% of card height */}
+        <div className="h-[128px] relative overflow-hidden">
+          {imageUrl ? (
+            <img
+              src={imageUrl}
+              alt=""
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+          ) : (
+            <div className={`w-full h-full bg-gradient-to-br ${fallbackGrad}`} />
+          )}
+          {/* Subtle bottom scrim so text reads cleanly */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
+          {/* Duration bottom-left */}
+          {durationText && (
+            <div className="absolute bottom-2 left-2 bg-black/30 backdrop-blur-sm rounded-full px-1.5 py-0.5">
+              <span className="text-white text-[8px] font-medium">{durationText}</span>
+            </div>
+          )}
+          {/* Platform badge top-right */}
+          {platformLabel && (
+            <div className={`absolute top-2 right-2 rounded-full px-1.5 py-0.5 backdrop-blur-sm ${item.platform === 'youtube' ? 'bg-red-500/75' : 'bg-green-600/75'}`}>
+              <span className="text-white text-[8px] font-semibold">{platformLabel}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Content */}
+        <div className="px-3 pt-2.5 pb-3">
+          <p className="text-earth text-[11px] font-semibold leading-snug line-clamp-2">{item.title}</p>
+          {item.subtitle && (
+            <p className="text-earth-light/55 text-[9px] mt-0.5 line-clamp-1">{item.subtitle}</p>
+          )}
+          <p className="text-sage text-[9px] font-semibold mt-2">{cta} →</p>
+        </div>
+      </button>
+    )
+  }
+
+  return (
+    <div className="min-h-screen pb-24" style={{ background: 'linear-gradient(175deg, #f5ede0 0%, #ede4d4 60%, #e6dccf 100%)' }}>
+      {/* ── Top bar ── */}
+      <div className="px-6 md:px-10 pt-5 pb-3 flex items-center justify-between">
+        <span className="text-[10px] text-earth-light/40 uppercase tracking-[0.18em] font-medium">
+          {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+        </span>
+        <div className="flex items-center gap-4">
+          {trackingStats.minutesToday > 0 && (
+            <span className="text-xs text-earth-light/50">{trackingStats.minutesToday}m today</span>
+          )}
+          {insights.streakDays >= 2 && (
+            <div className="inline-flex items-center gap-1.5 bg-terracotta/10 text-terracotta px-2.5 py-1 rounded-full">
+              <Flame className="w-3 h-3" />
+              <span className="text-[10px] font-medium">{insights.streakDays}d streak</span>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Numa Avatar */}
-      <div className="flex justify-center py-4">
-        <NumaAvatar mood={currentMood} state={numaState} size={100} />
+      {/* ── Hero — editorial 65/35 asymmetric grid ── */}
+      <div className="px-4 md:px-8">
+        {/* Outer container: rounded card, crisp shadow */}
+        <div
+          className="rounded-[24px] overflow-hidden shadow-2xl"
+          style={{ height: 'clamp(520px, 58vw, 620px)', background: '#c4b5a5' }}
+        >
+          {/* 65 / 35 grid — 4px gap shows the warm background as a seam */}
+          <div className="grid h-full" style={{ gridTemplateColumns: '65% 35%', gap: '4px' }}>
+
+            {/* ── LEFT PANEL — dominant landscape + UI ── */}
+            <div className="relative" style={{ height: '100%', overflow: 'hidden' }}>
+              <img
+                src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1600&q=85"
+                alt=""
+                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }}
+                loading="eager"
+              />
+
+              {/* Overlay scrims — z-index 1 so they sit above the photo but below the UI */}
+              <div className="absolute inset-0" style={{
+                zIndex: 1,
+                background: 'linear-gradient(to right, rgba(0,0,0,0.22) 0%, rgba(0,0,0,0.06) 55%, transparent 100%)'
+              }} />
+              <div className="absolute inset-0" style={{
+                zIndex: 1,
+                background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.55) 30%, rgba(0,0,0,0.15) 58%, transparent 82%)'
+              }} />
+
+              {/* ── Interactive UI block — z-index 2, lower-left, always on top of overlays ── */}
+              <div
+                className="absolute bottom-0 left-0 p-6"
+                style={{ width: '100%', maxWidth: '440px', zIndex: 2 }}
+              >
+                {/* 1. Greeting */}
+                <h1
+                  className="text-white font-bold leading-tight"
+                  style={{ fontSize: '1.75rem', textShadow: '0 2px 12px rgba(0,0,0,0.5)' }}
+                >
+                  {getGreeting()}, {user?.name || 'Yaara'} 🌿
+                </h1>
+
+                {/* 2. Subtitle */}
+                <p
+                  className="text-white mt-1.5 mb-4"
+                  style={{ fontSize: '14px', opacity: 0.8, textShadow: '0 1px 6px rgba(0,0,0,0.5)' }}
+                >
+                  How are you feeling right now?
+                </p>
+
+                {/* 3 & 4. Mood selector + input card */}
+                <div
+                  style={{
+                    background: 'rgba(237,229,218,0.90)',
+                    backdropFilter: 'blur(24px)',
+                    WebkitBackdropFilter: 'blur(24px)',
+                    borderRadius: '26px',
+                    boxShadow: '0 4px 24px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06)',
+                    border: '1px solid rgba(255,255,255,0.55)',
+                    padding: '20px 16px 16px',
+                  }}
+                >
+                  {/* 3. Mood pills */}
+                  <div style={{ display: 'flex', gap: '4px', marginBottom: '14px' }}>
+                    {moodOptions.map((mood) => {
+                      const isSelected = selectedMood === mood.id
+                      return (
+                        <button
+                          key={mood.id}
+                          onClick={() => handleMoodSelect(mood.id)}
+                          style={{
+                            flex: 1,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '10px 4px 10px',
+                            borderRadius: '14px',
+                            background: isSelected
+                              ? 'rgba(255,255,255,0.55)'
+                              : 'transparent',
+                            border: isSelected
+                              ? '1px solid rgba(190,175,158,0.50)'
+                              : '1px solid transparent',
+                            boxShadow: isSelected
+                              ? '0 2px 8px rgba(0,0,0,0.06)'
+                              : 'none',
+                            cursor: 'pointer',
+                            transform: isSelected ? 'scale(1.05)' : 'scale(1)',
+                            transition: 'all 0.2s ease',
+                          }}
+                        >
+                          <MoodFace id={mood.id} size={46} />
+                          <span style={{
+                            fontSize: '10.5px',
+                            fontWeight: 500,
+                            letterSpacing: '0.01em',
+                            color: isSelected ? '#5a4a3a' : '#9a8878',
+                          }}>
+                            {mood.label}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
+
+                  {/* 4. Input field — pill-shaped */}
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="text"
+                      value={checkInText}
+                      onChange={(e) => setCheckInText(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleCheckInSubmit()}
+                      placeholder="Or write how you feel..."
+                      style={{
+                        width: '100%',
+                        boxSizing: 'border-box',
+                        padding: '13px 48px 13px 20px',
+                        borderRadius: '100px',
+                        border: '1px solid rgba(190,175,158,0.30)',
+                        background: 'rgba(248,243,236,0.80)',
+                        boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.06)',
+                        fontSize: '13.5px',
+                        color: '#5a4a3a',
+                        outline: 'none',
+                        fontFamily: 'inherit',
+                      }}
+                    />
+                    <button
+                      onClick={handleCheckInSubmit}
+                      disabled={isThinking || (!checkInText.trim() && !selectedMood)}
+                      style={{
+                        position: 'absolute',
+                        right: '14px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        padding: '4px',
+                        opacity: isThinking || (!checkInText.trim() && !selectedMood) ? 0.25 : 0.55,
+                        transition: 'opacity 0.15s',
+                      }}
+                    >
+                      {isThinking
+                        ? <Loader2 className="w-4 h-4 animate-spin" style={{ color: '#7a6858' }} />
+                        : <Send className="w-4 h-4" style={{ color: '#7a6858' }} />}
+                    </button>
+                  </div>
+
+                  {detectedMood && showReply && (
+                    <p style={{ fontSize: '9px', color: 'rgba(74,55,40,0.45)', padding: '0 12px 8px' }}>
+                      Detected: <strong style={{ textTransform: 'capitalize' }}>{detectedMood}</strong> {getMoodEmoji(detectedMood)}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* ── RIGHT PANEL — single yoga image ── */}
+            <div className="relative" style={{ height: '100%', overflow: 'hidden' }}>
+              <img
+                src="https://images.unsplash.com/photo-1545205597-3d9d02c29597?w=800&q=85"
+                alt=""
+                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 20%' }}
+                loading="lazy"
+              />
+              <div className="absolute inset-0" style={{
+                background: 'linear-gradient(to top, rgba(0,0,0,0.35) 0%, transparent 45%)'
+              }} />
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Numa's Enhanced Reply */}
+      {/* ── Numa reply (after check-in) ── */}
       {(isThinking || showReply) && (
-        <div className="px-6 mb-4">
-          <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-sage/20 shadow-sm">
+        <div className="px-6 md:px-10 mt-6">
+          <div className="bg-white/65 backdrop-blur-sm rounded-2xl px-5 py-4 border border-sage/10 shadow-sm max-w-xl">
             {isThinking ? (
-              <div className="flex items-center gap-2 text-earth-light"><Loader2 className="w-4 h-4 animate-spin" /><span className="text-sm">Numa is thinking...</span></div>
+              <div className="flex items-center gap-2 text-earth-light">
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <span className="text-sm italic">Numa is with you...</span>
+              </div>
             ) : numaReplyData && (
               <div>
-                <p className="text-earth text-sm leading-relaxed">{numaReplyData.intro}</p>
-                <p className="text-earth-light text-sm mt-2">{numaReplyData.explanation}</p>
-                <ul className="mt-3 space-y-1">
-                  {numaReplyData.topPicks.map((pick, i) => (
-                    <li key={i} className="flex items-center gap-2 text-sm text-sage">
-                      <CheckCircle2 className="w-3 h-3" />
-                      <span>{pick.title}</span>
-                    </li>
-                  ))}
-                </ul>
-                {detectedSignals.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-3">
-                    {detectedSignals.map(signal => (
-                      <span key={signal} className="text-[10px] bg-sage/10 text-sage px-2 py-0.5 rounded-full">{signal}</span>
-                    ))}
-                  </div>
-                )}
+                <p className="text-earth text-[13px] leading-relaxed italic">"{numaReplyData.intro}"</p>
+                <p className="text-earth-light/60 text-xs mt-1.5 leading-relaxed">{numaReplyData.explanation}</p>
               </div>
             )}
           </div>
         </div>
       )}
 
-      {/* Top Picks Section - Compact, scannable */}
+      {/* ── Top picks (after check-in) ── */}
       {showTopPicks && (
-        <div ref={topPicksRef} className="px-6 py-3 animate-fadeSlideUp">
-          <div className="flex items-center gap-1.5 mb-2">
-            <Star className="w-4 h-4 text-sage/70" />
-            <h2 className="text-sm font-medium text-earth-light">Top picks for you</h2>
+        <div ref={topPicksRef} className="mt-8 animate-fadeSlideUp">
+          <div className="px-6 md:px-10 mb-4">
+            <p className="text-xl font-semibold text-earth tracking-tight">Just for you</p>
+            <p className="text-xs text-earth-light/50 font-light mt-0.5">Based on how you're feeling right now.</p>
           </div>
-          <div className="space-y-2">
-            {topPicks.map(item => renderCompactCard(item))}
+          <div className="flex gap-4 overflow-x-auto px-6 md:px-10 pb-2 scrollbar-hide">
+            {topPicks.filter(i => i.type !== 'info').map(item => renderSmallCard(item))}
           </div>
         </div>
       )}
 
-      {/* Check-in Section */}
-      <div className="px-6 py-4">
-        <h2 className="text-sm font-medium text-earth-light mb-3">How are you feeling?</h2>
-        <div className="flex flex-wrap gap-2 mb-4">
-          {moodOptions.map((mood) => (
-            <button key={mood.id} onClick={() => handleMoodSelect(mood.id)} className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-sm transition-all ${selectedMood === mood.id ? 'bg-sage text-cream shadow-md scale-105' : 'bg-cream-dark border border-sand hover:border-sage text-earth'}`}>
-              <span>{mood.emoji}</span><span>{mood.label}</span>
-            </button>
-          ))}
-        </div>
-        <div className="flex gap-2">
-          <input type="text" value={checkInText} onChange={(e) => setCheckInText(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleCheckInSubmit()} placeholder="Tell Numa how you're feeling..." className="flex-1 bg-cream-dark border border-sand rounded-xl px-4 py-3 text-earth placeholder:text-earth-light/50 focus:outline-none focus:border-sage transition-colors" />
-          <button onClick={handleCheckInSubmit} disabled={isThinking || (!checkInText.trim() && !selectedMood)} className="w-12 h-12 bg-sage hover:bg-sage-dark disabled:bg-sand disabled:cursor-not-allowed rounded-xl flex items-center justify-center transition-colors">
-            {isThinking ? <Loader2 className="w-5 h-5 text-cream animate-spin" /> : <Send className="w-5 h-5 text-cream" />}
-          </button>
-        </div>
-        {detectedMood && showReply && <p className="text-xs text-earth-light mt-2">Detected: <span className="font-medium capitalize">{detectedMood}</span> {getMoodEmoji(detectedMood)}</p>}
-      </div>
-
-      {/* More Ideas / Recommendations */}
-      <div className="px-6 py-4">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-medium text-earth">{showTopPicks ? 'More ideas' : 'Recommended for You'}</h2>
-          <span className="text-xs bg-sage/10 text-sage px-2 py-1 rounded-full capitalize">{getMoodEmoji(currentMood)} {currentMood}</span>
-        </div>
-        <div className="flex gap-3 overflow-x-auto pb-2 -mx-6 px-6 scrollbar-hide">
-          {(showTopPicks ? moreOptions : recommendations).map(item => renderCard(item))}
-        </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="px-6 py-4">
-        <h2 className="text-sm font-medium text-earth-light mb-3">Quick Actions</h2>
-        <div className="grid grid-cols-3 gap-3">
-          {quickActions.map((action) => {
-            const Icon = action.icon
-            return (
-              <button key={action.id} onClick={() => handleQuickAction(action.id)} className="flex flex-col items-center p-4 bg-cream-dark rounded-2xl border border-sand hover:border-sage transition-colors">
-                <div className={`w-12 h-12 ${action.color} rounded-full flex items-center justify-center mb-2`}><Icon className="w-6 h-6 text-cream" /></div>
-                <span className="text-earth text-sm font-medium">{action.label}</span>
-              </button>
-            )
-          })}
-        </div>
-      </div>
-
-      {/* Today's Progress Stats */}
-      <div className="px-6 py-4">
-        <h2 className="text-sm font-medium text-earth-light mb-3">Today's Progress</h2>
-        <div className="grid grid-cols-3 gap-3">
-          <div className="bg-cream-dark rounded-2xl p-4 border border-sand text-center">
-            <Award className="w-5 h-5 text-sage mx-auto mb-2" />
-            <p className="text-2xl font-semibold text-earth">{trackingStats.completedToday}</p>
-            <p className="text-xs text-earth-light mt-1">Completed</p>
-            {trackingStats.completedToday > 0 && (
-              <p className="text-[10px] text-sage mt-0.5">
-                {trackingStats.verifiedToday} verified • {trackingStats.estimatedToday} est.
-              </p>
-            )}
-          </div>
-          <div className="bg-cream-dark rounded-2xl p-4 border border-sand text-center">
-            <Clock className="w-5 h-5 text-terracotta mx-auto mb-2" />
-            <p className="text-2xl font-semibold text-earth">{trackingStats.minutesToday}</p>
-            <p className="text-xs text-earth-light mt-1">Minutes</p>
-          </div>
-          <div className="bg-cream-dark rounded-2xl p-4 border border-sand text-center">
-            <Flame className="w-5 h-5 text-earth mx-auto mb-2" />
-            <p className="text-2xl font-semibold text-earth">{trackingStats.streak}</p>
-            <p className="text-xs text-earth-light mt-1">Day streak</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Recent Activity from Tracking */}
-      <div className="px-6 py-4 flex-1">
-        <h2 className="text-sm font-medium text-earth-light mb-3">Recent Activity</h2>
-        {trackingStats.recentActivity.length > 0 ? (
-          <div className="space-y-2">
-            {trackingStats.recentActivity.map((activity) => (
-              <div key={activity.id} className="flex items-center gap-3 bg-cream-dark rounded-xl p-3 border border-sand">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                  activity.type === ContentType.BREATHING ? 'bg-sage/20' :
-                  activity.type === ContentType.MICRO ? 'bg-terracotta/20' :
-                  activity.type === ContentType.JOURNAL ? 'bg-earth/20' :
-                  activity.type === ContentType.RECIPE ? 'bg-terracotta/20' :
-                  activity.type === ContentType.YOUTUBE ? 'bg-red-100' :
-                  activity.type === ContentType.SPOTIFY ? 'bg-green-100' : 'bg-sage/20'
-                }`}>
-                  {activity.type === ContentType.BREATHING && <Wind className="w-5 h-5 text-sage" />}
-                  {activity.type === ContentType.MICRO && <Zap className="w-5 h-5 text-terracotta" />}
-                  {activity.type === ContentType.JOURNAL && <PenLine className="w-5 h-5 text-earth" />}
-                  {activity.type === ContentType.RECIPE && <UtensilsCrossed className="w-5 h-5 text-terracotta" />}
-                  {activity.type === ContentType.YOUTUBE && <Play className="w-5 h-5 text-red-500" />}
-                  {activity.type === ContentType.SPOTIFY && <Music className="w-5 h-5 text-green-600" />}
-                  {!activity.type && <Activity className="w-5 h-5 text-sage" />}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-earth text-sm font-medium truncate">{activity.title || activity.type}</p>
-                  <p className="text-earth-light text-xs flex items-center gap-1">
-                    {activity.method === CompletionMethod.VERIFIED ? (
-                      <><CheckCircle2 className="w-3 h-3 text-sage" /> Verified</>
-                    ) : (
-                      <><Clock className="w-3 h-3 text-earth-light" /> Estimated</>
-                    )}
-                  </p>
-                </div>
-                <span className="text-earth-light text-xs flex-shrink-0">{activity.timeFormatted}</span>
+      {/* ── Intent-based content sections ── */}
+      <div className="mt-10 px-6 md:px-10">
+        {[
+          { title: 'Move your body',  tagline: "Let movement carry what words can't.",    items: sectionMove },
+          { title: 'Calm your mind',  tagline: 'Sounds and stillness to soften the noise.', items: sectionCalm },
+          { title: 'Reflect',         tagline: 'A few quiet words to yourself.',           items: sectionReflect },
+          { title: 'Quick reset',     tagline: "One minute. That's all it takes.",         items: sectionReset },
+        ].map(({ title, tagline, items }) =>
+          items.length > 0 ? (
+            <div key={title} className="mb-10">
+              <div className="mb-4">
+                <p className="text-xl font-semibold text-earth tracking-tight">{title}</p>
+                <p className="text-[12px] text-earth-light/45 font-light mt-0.5">{tagline}</p>
               </div>
-            ))}
-          </div>
-        ) : (
-          <div className="bg-cream-dark rounded-xl p-6 border border-sand text-center">
-            <Activity className="w-8 h-8 text-earth-light/50 mx-auto mb-2" />
-            <p className="text-earth-light text-sm">No activities yet today</p>
-            <p className="text-earth-light/70 text-xs mt-1">Complete a breathing exercise or watch a video to start tracking</p>
-          </div>
+              <div className="flex gap-4 overflow-x-auto pb-3 scrollbar-hide" style={{ marginLeft: '-4px', paddingLeft: '4px' }}>
+                {items.map(item => renderSmallCard(item))}
+              </div>
+            </div>
+          ) : null
         )}
       </div>
 
-      {/* CTA */}
       {!todayCheckIn && (
-        <div className="p-6 pt-0">
-          <button onClick={() => navigate('/checkin')} className="w-full bg-terracotta hover:bg-terracotta-dark text-cream py-4 rounded-2xl font-medium transition-colors">Start Today's Check-in</button>
+        <div className="px-6 md:px-10 pb-5">
+          <button
+            onClick={() => navigate('/checkin')}
+            className="bg-terracotta hover:bg-terracotta-dark text-cream px-6 py-3 rounded-xl text-sm font-medium transition-colors shadow-sm"
+          >
+            Start Today's Check-in
+          </button>
         </div>
       )}
 
       <MediaPlayerModal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setSelectedMedia(null) }} media={selectedMedia} onCompleted={refreshStats} />
       <RecipeModal recipe={selectedRecipe} isOpen={recipeModalOpen} onClose={() => { setRecipeModalOpen(false); setSelectedRecipe(null) }} onTrackingUpdate={refreshStats} />
 
-      {/* Animation styles */}
       <style>{`
         @keyframes fadeSlideUp {
-          from { opacity: 0; transform: translateY(20px); }
+          from { opacity: 0; transform: translateY(16px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        .animate-fadeSlideUp {
-          animation: fadeSlideUp 0.4s ease-out forwards;
-        }
+        .animate-fadeSlideUp { animation: fadeSlideUp 0.5s ease-out forwards; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
       `}</style>
     </div>
   )

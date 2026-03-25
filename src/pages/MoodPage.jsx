@@ -98,6 +98,9 @@ const moodConfig = {
 
 const DEFAULT_MOOD = 'stressed'
 
+// Broader wellness search used as a final fallback before giving up
+const BROAD_WELLNESS_KEYWORDS = 'yoga meditation breathwork sound bath pilates mindfulness stretching tai chi qigong wellness workshop healing relaxation'
+
 // ─── Media rotation (variety logic) ─────────────────────────────────────────
 // Stable per mood+type per day; rotates on Refresh; avoids repeating the last shown item.
 
@@ -249,6 +252,8 @@ export default function MoodPage() {
   const [nearbyItems, setNearbyItems] = useState([])
   const [nearbyLoading, setNearbyLoading] = useState(false)
   const [nearbyError, setNearbyError] = useState(null)
+  const [nearbyBroadenAvailable, setNearbyBroadenAvailable] = useState(false)
+  const [nearbyExhausted, setNearbyExhausted] = useState(false)
 
   // Request geolocation on mount
   useEffect(() => {
@@ -284,66 +289,91 @@ export default function MoodPage() {
     fetchNearby(location)
   }, [location, mood]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Fetch physical events + places for one attempt; returns combined items array
+  async function tryFetchItems(loc, keywords, evRadius, plRadius) {
+    const kw = encodeURIComponent(keywords)
+    console.log(`[MoodPage] tryFetch — evRadius:${evRadius}km plRadius:${plRadius}m`)
+    const [evRes, plRes] = await Promise.allSettled([
+      fetch(`/.netlify/functions/nearby-events?mood=${mood}&lat=${loc.lat}&lng=${loc.lng}&keywords=${kw}&radius=${evRadius}`),
+      fetch(`/.netlify/functions/nearby-places?lat=${loc.lat}&lng=${loc.lng}&radius=${plRadius}`),
+    ])
+    const items = []
+    if (evRes.status === 'fulfilled' && evRes.value.ok) {
+      const data = await evRes.value.json()
+      items.push(...(data.events || []).slice(0, 2).map(e => ({ ...e, _kind: 'event' })))
+    }
+    if (plRes.status === 'fulfilled' && plRes.value.ok) {
+      const data = await plRes.value.json()
+      items.push(...(data.places || []).slice(0, 2).map(p => ({ ...p, _kind: 'place' })))
+    }
+    console.log('[MoodPage] tryFetch found:', items.length, 'items')
+    return items
+  }
+
+  // Show items immediately, then silently replace with AI-ranked top 3
+  async function rankAndSet(items) {
+    setNearbyItems(items)
+    try {
+      const rankRes = await fetch('/.netlify/functions/rank-nearby', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items, mood }),
+      })
+      if (rankRes.ok) {
+        const { ranked } = await rankRes.json()
+        if (Array.isArray(ranked) && ranked.length > 0) setNearbyItems(ranked)
+      }
+    } catch (rankErr) {
+      console.warn('[MoodPage] rank-nearby failed silently:', rankErr.message)
+    }
+  }
+
   async function fetchNearby(loc) {
     console.log('[MoodPage] fetchNearby called — loc:', loc, '| mood:', mood)
     setNearbyLoading(true)
     setNearbyError(null)
-    const kw = encodeURIComponent(config.nearbyKeywords)
-
+    setNearbyBroadenAvailable(false)
+    setNearbyExhausted(false)
     try {
-      console.log('[MoodPage] fetching /.netlify/functions/nearby-events and nearby-places...')
-      const [evRes, plRes] = await Promise.allSettled([
-        fetch(`/.netlify/functions/nearby-events?mood=${mood}&lat=${loc.lat}&lng=${loc.lng}&keywords=${kw}`),
-        fetch(`/.netlify/functions/nearby-places?mood=${mood}&lat=${loc.lat}&lng=${loc.lng}&keywords=${kw}&radius=800`),
-      ])
+      // Attempt 1: mood-specific keywords, default radius
+      let items = await tryFetchItems(loc, config.nearbyKeywords, '30', '1000')
 
-      console.log('[MoodPage] fetch settled — events:', evRes.status, '| places:', plRes.status)
-
-      const items = []
-
-      if (evRes.status === 'fulfilled' && evRes.value.ok) {
-        const data = await evRes.value.json()
-        console.log('[MoodPage] events response:', data)
-        items.push(...(data.events || []).slice(0, 2).map(e => ({ ...e, _kind: 'event' })))
-      } else {
-        console.log('[MoodPage] events fetch failed —', evRes.status === 'rejected' ? evRes.reason : evRes.value?.status)
-      }
-      if (plRes.status === 'fulfilled' && plRes.value.ok) {
-        const rawPlacesText = await plRes.value.clone().text().catch(() => '')
-        console.log('[MoodPage] places raw response (first 500):', rawPlacesText.slice(0, 500))
-        const data = await plRes.value.json()
-        console.log('[MoodPage] places response:', data)
-        items.push(...(data.places || []).slice(0, 2).map(p => ({ ...p, _kind: 'place' })))
-      } else {
-        console.log('[MoodPage] places fetch failed —', plRes.status === 'rejected' ? plRes.reason : plRes.value?.status)
-      }
-
-      console.log('[MoodPage] total nearby items:', items.length)
-
+      // Attempt 2: same keywords, wider radius
       if (items.length === 0) {
-        setNearbyItems([])
-        setNearbyError('No nearby results found for this mood.')
+        console.log('[MoodPage] attempt 1 empty — expanding radius')
+        items = await tryFetchItems(loc, config.nearbyKeywords, '80', '5000')
+      }
+
+      if (items.length > 0) {
+        await rankAndSet(items)
       } else {
-        // Show raw items immediately, then replace with AI-ranked results
-        setNearbyItems(items)
-        try {
-          const rankRes = await fetch('/.netlify/functions/rank-nearby', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ items, mood }),
-          })
-          if (rankRes.ok) {
-            const { ranked } = await rankRes.json()
-            console.log('[MoodPage] ranked items:', ranked)
-            if (Array.isArray(ranked) && ranked.length > 0) setNearbyItems(ranked)
-          }
-        } catch (rankErr) {
-          console.warn('[MoodPage] rank-nearby failed silently:', rankErr.message)
-        }
+        console.log('[MoodPage] both attempts empty — offering broaden')
+        setNearbyBroadenAvailable(true)
       }
     } catch (err) {
       console.error('[MoodPage] fetchNearby error:', err)
       setNearbyError('Could not load nearby results.')
+    } finally {
+      setNearbyLoading(false)
+    }
+  }
+
+  // Called when user taps "Broaden search" — tries broad wellness keywords at large radius
+  async function fetchNearbyBroad(loc) {
+    console.log('[MoodPage] fetchNearbyBroad — broad wellness keywords, 150km/10km')
+    setNearbyLoading(true)
+    setNearbyBroadenAvailable(false)
+    try {
+      const items = await tryFetchItems(loc, BROAD_WELLNESS_KEYWORDS, '150', '10000')
+      if (items.length > 0) {
+        await rankAndSet(items)
+      } else {
+        console.log('[MoodPage] broad attempt also empty')
+        setNearbyExhausted(true)
+      }
+    } catch (err) {
+      console.error('[MoodPage] fetchNearbyBroad error:', err)
+      setNearbyExhausted(true)
     } finally {
       setNearbyLoading(false)
     }
@@ -498,20 +528,46 @@ export default function MoodPage() {
             </div>
           )}
 
-          {/* Error */}
+          {/* Network error */}
           {nearbyError && !nearbyLoading && (
             <div className="bg-sand/30 rounded-2xl p-4 text-center border border-sand">
               <p className="text-earth-light text-sm">{nearbyError}</p>
             </div>
           )}
 
+          {/* No results found — offer broaden search */}
+          {nearbyBroadenAvailable && !nearbyLoading && (
+            <div className="bg-sand/30 rounded-2xl p-5 border border-sand text-center">
+              <p className="text-earth-light text-sm mb-3">Nothing found nearby right now.</p>
+              <button
+                type="button"
+                onClick={() => fetchNearbyBroad(location)}
+                className="text-sage text-sm font-medium hover:underline"
+              >
+                Broaden search
+              </button>
+            </div>
+          )}
+
+          {/* All attempts exhausted */}
+          {nearbyExhausted && !nearbyLoading && (
+            <div className="bg-sand/30 rounded-2xl p-5 border border-sand text-center">
+              <p className="text-earth-light text-sm">No wellness events or places found nearby.</p>
+            </div>
+          )}
+
           {/* Results */}
           {nearbyItems.length > 0 && (
             <div className="space-y-3">
-              {nearbyItems.map((item, i) => (
+              {nearbyItems.map((item, i) => {
+                const href = item.url
+                  || (item.lat && item.lng
+                    ? `https://www.openstreetmap.org/?mlat=${item.lat}&mlon=${item.lng}#map=16/${item.lat}/${item.lng}`
+                    : undefined)
+                return (
                 <a
                   key={i}
-                  href={item.url}
+                  href={href}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-start gap-3 p-4 bg-white/50 hover:bg-white/70 rounded-2xl border border-sand transition-colors group"
@@ -542,7 +598,8 @@ export default function MoodPage() {
                   </div>
                   <ExternalLink className="w-4 h-4 text-earth-light/40 group-hover:text-sage flex-shrink-0 mt-0.5 transition-colors" />
                 </a>
-              ))}
+                )
+              })}
             </div>
           )}
         </section>

@@ -1,10 +1,19 @@
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET,OPTIONS',
+  'Content-Type': 'application/json',
+}
+
 exports.handler = async function (event) {
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 200, headers: CORS_HEADERS, body: '' }
+  }
   try {
     const params = event.queryStringParameters || {};
     const lat = parseFloat(params.lat);
     const lng = parseFloat(params.lng);
     const requestedRadius = parseInt(params.radius || "800", 10);
-    const radius = Math.min(requestedRadius, 1000);
+    const radius = Math.min(requestedRadius, 10000);
 
     console.log("nearby-places incoming radius:", requestedRadius, "| capped radius:", radius);
     console.log("nearby-places params — lat:", lat, "lng:", lng);
@@ -12,6 +21,7 @@ exports.handler = async function (event) {
     if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
       return {
         statusCode: 400,
+        headers: CORS_HEADERS,
         body: JSON.stringify({ error: "Missing or invalid lat/lng" }),
       };
     }
@@ -46,6 +56,7 @@ exports.handler = async function (event) {
       console.log("nearby-places fetch failed after", elapsed, "ms —", fetchErr.message);
       return {
         statusCode: 200,
+        headers: CORS_HEADERS,
         body: JSON.stringify({
           places: [],
           fallback: true,
@@ -69,6 +80,7 @@ exports.handler = async function (event) {
     } catch (e) {
       return {
         statusCode: 200,
+        headers: CORS_HEADERS,
         body: JSON.stringify({
           places: [],
           fallback: true,
@@ -118,6 +130,7 @@ exports.handler = async function (event) {
 
     return {
       statusCode: 200,
+      headers: CORS_HEADERS,
       body: JSON.stringify({
         places: uniquePlaces.slice(0, 20),
       }),
@@ -127,6 +140,7 @@ exports.handler = async function (event) {
 
     return {
       statusCode: 200,
+      headers: CORS_HEADERS,
       body: JSON.stringify({
         places: [],
         fallback: true,
