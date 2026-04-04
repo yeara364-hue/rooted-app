@@ -1804,7 +1804,7 @@ export default function Home() {
   return (
     <div className="min-h-screen pb-24" style={{ background: 'linear-gradient(175deg, #f5ede0 0%, #ede4d4 60%, #e6dccf 100%)' }}>
       {/* ── Top bar ── */}
-      <div style={{ maxWidth: '920px', margin: '0 auto', padding: '0 20px' }}>
+      <div style={{ maxWidth: '920px', margin: '0 auto', padding: '0 16px' }}>
       <div className="pt-5 pb-3 flex items-center justify-between">
         <span className="text-[10px] text-earth-light/40 uppercase tracking-[0.18em] font-medium">
           {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
@@ -1823,182 +1823,156 @@ export default function Home() {
       </div>
       </div>
 
-      {/* ── Hero — editorial 65/35 asymmetric grid ── */}
-      {/*
-        Height strategy:
-          - Topbar is ~48px, so usable viewport = 100vh - 48px
-          - We target 84% of that so ~8vh of the next section peeks (scroll affordance)
-          - clamp() keeps it sane: never smaller than 380px, never taller than 520px
-          - This means a 768px laptop gets ≈ 604px usable → 84% = ~508px → capped at 520px ✓
-          - A 900px laptop gets ≈ 714px → 84% = ~600px → capped at 520px ✓
-          - A 1080px desktop gets ≈ 868px → 84% = ~730px → capped at 520px ✓
-      */}
-      <div style={{ maxWidth: '920px', margin: '0 auto', padding: '0 20px' }}>
-        <div
-          className="rounded-[20px] overflow-hidden shadow-2xl"
-          style={{ height: 'clamp(380px, calc((100vh - 48px) * 0.84), 520px)', background: '#c4b5a5' }}
-        >
-          <div className="grid h-full" style={{ gridTemplateColumns: '68% 32%', gap: '4px' }}>
-
-            {/* ── LEFT PANEL ── */}
-            <div className="relative" style={{ height: '100%', overflow: 'hidden' }}>
-              <img
-                src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1600&q=85"
-                alt=""
-                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }}
-                loading="eager"
+      {/* ── Hero — single full-width image ── */}
+      <div className="rh-hero" style={{ position: 'relative', width: '100%', height: '52vh', minHeight: '290px', maxHeight: '400px', overflow: 'hidden' }}>
+        <img
+          src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=900&q=88"
+          alt=""
+          style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 30%', display: 'block' }}
+          loading="eager"
+          onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = ABSOLUTE_FALLBACK }}
+        />
+        {/* Gradient: light at top, deep teal at bottom for text legibility */}
+        <div className="absolute inset-0" style={{
+          background: 'linear-gradient(to bottom, rgba(18,42,48,0.06) 0%, rgba(18,42,48,0.38) 52%, rgba(18,42,48,0.86) 100%)'
+        }} />
+        {/* Greeting — bottom-left on mobile, vertically centered on desktop */}
+        <div className="rh-greeting absolute" style={{ bottom: '28px', left: '20px', right: '20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            {/* Numa — 44px mobile, scales to 64px on desktop via CSS */}
+            <div className="rh-numa-wrap" style={{ flexShrink: 0 }}>
+              <NumaAvatar
+                mood={currentMood === 'neutral' ? 'neutral' : currentMood}
+                state={numaState}
+                size={44}
               />
-              <div className="absolute inset-0" style={{
-                zIndex: 1,
-                background: 'linear-gradient(to right, rgba(24,60,67,0.52) 0%, rgba(24,60,67,0.15) 55%, transparent 100%)'
-              }} />
-              <div className="absolute inset-0" style={{
-                zIndex: 1,
-                background: 'linear-gradient(to top, rgba(24,60,67,0.96) 0%, rgba(35,75,82,0.72) 28%, rgba(35,75,82,0.28) 58%, transparent 82%)'
-              }} />
-
-              {/* Interactive UI block */}
-              <div
-                className="absolute bottom-0 left-0"
-                style={{ padding: 'clamp(12px, 2vh, 18px) 18px clamp(14px, 2vh, 18px)', width: '100%', maxWidth: '300px', zIndex: 2 }}
-              >
-                {/* Greeting */}
-                <h1
-                  className="text-white font-bold leading-tight"
-                  style={{ fontSize: '1.3rem', textShadow: '0 2px 14px rgba(0,0,0,0.65)', marginBottom: '9px' }}
-                >
-                  {getGreeting()}, {user?.name || 'Yaara'} 🌿
-                </h1>
-
-                {/* Mood card */}
-                <div style={{
-                  background: 'linear-gradient(165deg, #F9F3E8 0%, #F3EBDD 45%, #EDE3CE 100%)',
-                  borderRadius: '20px',
-                  boxShadow: '0 12px 36px rgba(24,60,67,0.46), 0 4px 12px rgba(24,60,67,0.22)',
-                  border: '1px solid rgba(255,255,255,0.88)',
-                  padding: '12px 11px 11px',
-                  maxWidth: '360px',
-                }}>
-                  <p style={{
-                    textAlign: 'center',
-                    fontSize: '12.5px',
-                    fontWeight: 700,
-                    color: '#3F342B',
-                    letterSpacing: '-0.01em',
-                    marginBottom: '9px',
-                    lineHeight: 1.3,
-                  }}>
-                    How are you feeling right now?
-                  </p>
-
-                  {/* Mood chips */}
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', justifyContent: 'center', marginBottom: '9px' }}>
-                    {moodOptions.map((mood) => (
-                      <button
-                        key={mood.id}
-                        onClick={() => handleMoodSelect(mood.id)}
-                        className="hover:scale-[1.03] active:scale-[0.97] transition-transform duration-150"
-                        style={{
-                          width: 'calc(33.33% - 3.5px)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '5px',
-                          padding: '7px 6px',
-                          borderRadius: '100px',
-                          background: mood.bg,
-                          border: `1px solid ${mood.border}`,
-                          boxShadow: '0 2px 5px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.70)',
-                          cursor: 'pointer',
-                        }}
-                      >
-                        <TinyFace id={mood.id} color={mood.text} />
-                        <span style={{
-                          fontSize: '11.5px',
-                          fontWeight: 600,
-                          letterSpacing: '0.005em',
-                          color: mood.text,
-                          whiteSpace: 'nowrap',
-                        }}>
-                          {mood.label}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Input */}
-                  <div style={{ position: 'relative' }}>
-                    <input
-                      type="text"
-                      value={checkInText}
-                      onChange={(e) => setCheckInText(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleCheckInSubmit()}
-                      placeholder="Or describe how you feel..."
-                      className="placeholder:text-[#9B8C7C]"
-                      style={{
-                        width: '100%',
-                        boxSizing: 'border-box',
-                        padding: '9px 38px 9px 14px',
-                        borderRadius: '100px',
-                        border: '1.5px solid #CDBFA9',
-                        background: '#FAF6EF',
-                        boxShadow: 'inset 0 2px 5px rgba(90,70,50,0.08)',
-                        fontSize: '12px',
-                        color: '#3F342B',
-                        outline: 'none',
-                        fontFamily: 'inherit',
-                      }}
-                    />
-                    <button
-                      onClick={handleCheckInSubmit}
-                      disabled={isThinking || (!checkInText.trim() && !selectedMood)}
-                      style={{
-                        position: 'absolute',
-                        right: '12px',
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        padding: '4px',
-                        opacity: isThinking || (!checkInText.trim() && !selectedMood) ? 0.25 : 0.65,
-                        transition: 'opacity 0.15s',
-                      }}
-                    >
-                      {isThinking
-                        ? <Loader2 className="w-4 h-4 animate-spin" style={{ color: '#B7A46A' }} />
-                        : <Send className="w-4 h-4" style={{ color: '#B7A46A' }} />}
-                    </button>
-                  </div>
-
-                  {detectedMood && showReply && (
-                    <p style={{ fontSize: '9px', color: '#9B8C7C', marginTop: '6px', paddingLeft: '4px' }}>
-                      Detected: <strong style={{ textTransform: 'capitalize', color: '#6B5847' }}>{detectedMood}</strong>
-                    </p>
-                  )}
-                </div>
-              </div>
             </div>
-
-            {/* ── RIGHT PANEL ── */}
-            <div className="relative" style={{ height: '100%', overflow: 'hidden' }}>
-              <img
-                src="https://images.unsplash.com/photo-1545205597-3d9d02c29597?w=800&q=85"
-                alt=""
-                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 20%' }}
-                loading="lazy"
-              />
-              <div className="absolute inset-0" style={{
-                background: 'linear-gradient(to top, rgba(0,0,0,0.35) 0%, transparent 45%)'
-              }} />
+            <div style={{ minWidth: 0 }}>
+              <h1 className="rh-h1" style={{
+                color: '#fff',
+                fontSize: '27px',
+                fontWeight: 800,
+                lineHeight: 1.15,
+                letterSpacing: '-0.02em',
+                textShadow: '0 2px 18px rgba(0,0,0,0.50)',
+                marginBottom: '5px',
+              }}>
+                {getGreeting()}, {user?.name || 'Yaara'} 🌿
+              </h1>
+              <p className="rh-subtitle" style={{ color: 'rgba(255,255,255,0.70)', fontSize: '13px', letterSpacing: '0.01em' }}>
+                What do you need right now?
+              </p>
             </div>
-
           </div>
         </div>
       </div>
 
+      {/* ── Mood card — below hero on mobile, overlaps hero on desktop ── */}
+      <div className="rh-mood-outer" style={{ padding: '0 20px', marginTop: '0' }}>
+        <div className="rh-mood-card" style={{
+          background: 'linear-gradient(160deg, #FDFAF4 0%, #F4EDE0 55%, #EDE3CE 100%)',
+          borderRadius: '20px',
+          boxShadow: '0 6px 24px rgba(24,60,67,0.13), 0 2px 6px rgba(0,0,0,0.06)',
+          border: '1px solid rgba(255,255,255,0.94)',
+          padding: '14px 13px 13px',
+        }}>
+          <p className="rh-mood-heading" style={{
+            textAlign: 'center',
+            fontSize: '13px',
+            fontWeight: 700,
+            color: '#3A2F24',
+            letterSpacing: '-0.01em',
+            lineHeight: 1.3,
+            marginBottom: '11px',
+          }}>
+            How are you feeling right now?
+          </p>
+
+          {/* Mood chips — 3-per-row on mobile, single row on desktop */}
+          <div className="rh-chips" style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', justifyContent: 'center', marginBottom: '10px' }}>
+            {moodOptions.map((mood) => (
+              <button
+                key={mood.id}
+                onClick={() => handleMoodSelect(mood.id)}
+                className="rh-chip active:scale-[0.94] transition-transform duration-100"
+                style={{
+                  width: 'calc(33.33% - 4px)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '5px',
+                  padding: '9px 6px',
+                  borderRadius: '100px',
+                  background: mood.bg,
+                  border: 'none',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.65)',
+                  cursor: 'pointer',
+                  WebkitTapHighlightColor: 'transparent',
+                }}
+              >
+                <TinyFace id={mood.id} color={mood.text} />
+                <span style={{
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  color: mood.text,
+                  whiteSpace: 'nowrap',
+                }}>
+                  {mood.label}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Input */}
+          <div style={{ position: 'relative' }}>
+            <input
+              type="text"
+              value={checkInText}
+              onChange={(e) => setCheckInText(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleCheckInSubmit()}
+              placeholder="Or describe how you feel..."
+              className="rh-input placeholder:text-[#9B8C7C]"
+              style={{
+                width: '100%',
+                boxSizing: 'border-box',
+                padding: '10px 38px 10px 14px',
+                borderRadius: '100px',
+                border: '1px solid #D8CAAF',
+                background: '#FAF6EF',
+                fontSize: '13px',
+                color: '#3F342B',
+                outline: 'none',
+                fontFamily: 'inherit',
+                boxShadow: 'inset 0 1px 4px rgba(90,70,50,0.07)',
+                WebkitTapHighlightColor: 'transparent',
+              }}
+            />
+            <button
+              onClick={handleCheckInSubmit}
+              disabled={isThinking || (!checkInText.trim() && !selectedMood)}
+              style={{
+                position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
+                background: 'none', border: 'none', cursor: 'pointer', padding: '4px',
+                opacity: isThinking || (!checkInText.trim() && !selectedMood) ? 0.22 : 0.72,
+                transition: 'opacity 0.15s',
+              }}
+            >
+              {isThinking
+                ? <Loader2 className="w-4 h-4 animate-spin" style={{ color: '#B7A46A' }} />
+                : <Send className="w-4 h-4" style={{ color: '#B7A46A' }} />}
+            </button>
+          </div>
+
+          {detectedMood && showReply && (
+            <p style={{ fontSize: '10px', color: '#9B8C7C', marginTop: '7px', paddingLeft: '2px' }}>
+              Detected: <strong style={{ textTransform: 'capitalize', color: '#6B5847' }}>{detectedMood}</strong>
+            </p>
+          )}
+        </div>
+      </div>
+
       {/* ── Centered content container — aligns with hero (920px) ── */}
-      <div style={{ maxWidth: '920px', margin: '0 auto', padding: '0 20px' }}>
+      <div style={{ maxWidth: '920px', margin: '0 auto', padding: '0 16px' }}>
 
         {/* ── Numa reply (after check-in) ── */}
         {(isThinking || showReply) && (
@@ -2026,7 +2000,7 @@ export default function Home() {
               <p style={{ fontSize: '21px', fontWeight: 700, color: DS.titleColor, letterSpacing: '-0.015em', lineHeight: 1.2 }}>Just for you</p>
               <p style={{ fontSize: DS.cardSubSize, color: DS.subColor, marginTop: '3px' }}>Based on how you're feeling right now.</p>
             </div>
-            <div className="flex overflow-x-auto pb-2 scrollbar-hide" style={{ gap: DS.rowGap, marginLeft: '-20px', paddingLeft: '20px', marginRight: '-20px', paddingRight: '20px' }}>
+            <div className="flex overflow-x-auto pb-2 scrollbar-hide" style={{ gap: DS.rowGap, marginLeft: '-16px', paddingLeft: '16px', marginRight: '-16px', paddingRight: '16px' }}>
               {topPicks.filter(i => i.type !== 'info').map(item => renderSmallCard(item))}
             </div>
           </div>
@@ -2044,7 +2018,7 @@ export default function Home() {
               </div>
               {renderFeaturedCard(sectionMove[0])}
               {sectionMove.length > 1 && (
-                <div className="flex overflow-x-auto pb-1 scrollbar-hide" style={{ gap: DS.rowGap, marginTop: DS.featToRow, marginLeft: '-20px', paddingLeft: '20px', marginRight: '-20px', paddingRight: '20px' }}>
+                <div className="flex overflow-x-auto pb-1 scrollbar-hide" style={{ gap: DS.rowGap, marginTop: DS.featToRow, marginLeft: '-16px', paddingLeft: '16px', marginRight: '-16px', paddingRight: '16px' }}>
                   {sectionMove.slice(1).map(item => renderCompactCard(item))}
                 </div>
               )}
@@ -2060,7 +2034,7 @@ export default function Home() {
               </div>
               {renderFeaturedCard(sectionCalm[0])}
               {sectionCalm.length > 1 && (
-                <div className="flex overflow-x-auto pb-1 scrollbar-hide" style={{ gap: DS.rowGap, marginTop: DS.featToRow, marginLeft: '-20px', paddingLeft: '20px', marginRight: '-20px', paddingRight: '20px' }}>
+                <div className="flex overflow-x-auto pb-1 scrollbar-hide" style={{ gap: DS.rowGap, marginTop: DS.featToRow, marginLeft: '-16px', paddingLeft: '16px', marginRight: '-16px', paddingRight: '16px' }}>
                   {sectionCalm.slice(1).map(item => renderCompactCard(item))}
                 </div>
               )}
@@ -2090,7 +2064,7 @@ export default function Home() {
                 <h2 style={{ fontSize: '21px', fontWeight: 700, color: DS.titleColor, letterSpacing: '-0.015em', lineHeight: 1.2 }}>Quick reset</h2>
                 <p style={{ fontSize: DS.cardSubSize, color: DS.subColor, marginTop: '3px' }}>One minute. That's all it takes.</p>
               </div>
-              <div className="flex overflow-x-auto pb-1 scrollbar-hide" style={{ gap: DS.rowGap, marginLeft: '-20px', paddingLeft: '20px', marginRight: '-20px', paddingRight: '20px' }}>
+              <div className="flex overflow-x-auto pb-1 scrollbar-hide" style={{ gap: DS.rowGap, marginLeft: '-16px', paddingLeft: '16px', marginRight: '-16px', paddingRight: '16px' }}>
                 {sectionReset.map(item => renderQuickCard(item))}
               </div>
             </section>
@@ -2122,6 +2096,80 @@ export default function Home() {
         .animate-fadeSlideUp { animation: fadeSlideUp 0.5s ease-out forwards; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
+
+        /* ── Numa in hero — floating animation ── */
+        .rh-numa-wrap {
+          transform-origin: bottom left;
+          animation: rh-numa-float 5s ease-in-out infinite;
+        }
+        @keyframes rh-numa-float {
+          0%, 100% { transform: translateY(0px); }
+          50%       { transform: translateY(-4px); }
+        }
+
+        /* ── Desktop / web layout overrides (≥768px) ──────────────────── */
+        @media (min-width: 768px) {
+          /* Hero — taller, constrained */
+          .rh-hero {
+            height: 62vh !important;
+            min-height: 380px !important;
+            max-height: 520px !important;
+          }
+          /* Greeting — vertically centered, left-aligned */
+          .rh-greeting {
+            bottom: auto !important;
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            left: 60px !important;
+            right: auto !important;
+            max-width: 560px;
+          }
+          .rh-h1 { font-size: 38px !important; margin-bottom: 10px !important; }
+          .rh-subtitle { font-size: 15px !important; }
+
+          /* Numa — scale up on desktop (64px visual from 44px base) */
+          .rh-numa-wrap {
+            animation: rh-numa-float 5s ease-in-out infinite;
+            margin-right: 24px; /* compensate for rightward scale overflow */
+          }
+          @keyframes rh-numa-float {
+            0%, 100% { transform: scale(1.45) translateY(0px); }
+            50%       { transform: scale(1.45) translateY(-4px); }
+          }
+
+          /* Mood card — centered, max-width, overlaps hero bottom */
+          .rh-mood-outer {
+            display: flex !important;
+            justify-content: center !important;
+            padding: 0 24px !important;
+            margin-top: -48px !important;
+            position: relative !important;
+            z-index: 10 !important;
+          }
+          .rh-mood-card {
+            max-width: 600px;
+            width: 100% !important;
+            padding: 16px 20px !important;
+            border-radius: 24px !important;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08) !important;
+          }
+          .rh-mood-heading { font-size: 14px !important; margin-bottom: 10px !important; }
+
+          /* Chips — single row, auto width */
+          .rh-chips {
+            flex-wrap: nowrap !important;
+            gap: 7px !important;
+            margin-bottom: 10px !important;
+          }
+          .rh-chip {
+            width: auto !important;
+            flex: 1 !important;
+            padding: 8px 8px !important;
+            font-size: 11.5px !important;
+          }
+          .rh-chip span { font-size: 11.5px !important; }
+          .rh-input { padding: 10px 40px 10px 16px !important; font-size: 13px !important; }
+        }
       `}</style>
     </div>
   )
