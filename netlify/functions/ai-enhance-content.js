@@ -1,87 +1,20 @@
 /**
- * ai-enhance-content
- *
- * POST body: { mood, timeOfDay, items: [{ id, title, type, subtitle? }] }
- * Returns:   { enhancements: [{ id, enhancedTitle?, microCopy? }] }
- *
- * - Sends up to 5 items to OpenRouter for light enhancement
- * - Falls back to empty enhancements if AI fails or is slow
- * - Never blocks the UI — frontend always renders original content first
+ * ai-enhance-content — DEBUG BUILD
+ * Returns a debug object alongside enhancements so we can trace exactly
+ * where the OpenRouter path breaks.
+ * Remove debug fields once connection is confirmed working.
  */
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
 const MODEL          = 'mistralai/mistral-7b-instruct:free'
 const TIMEOUT_MS     = 5000
 
-function timeLabel(timeOfDay) {
-  return {
-    morning:   'start of the day',
-    afternoon: 'midday',
-    evening:   'end of the day',
-    night:     'late night',
-  }[timeOfDay] || 'during the day'
-}
-
-function buildPrompt(mood, timeOfDay, items) {
-  const list = items.map(i =>
-    `- id: ${i.id} | type: ${i.type} | title: "${i.title}"${i.subtitle ? ` | subtitle: "${i.subtitle}"` : ''}`
-  ).join('\n')
-
-  return `You are a wellness content writer for a calm, premium app called Rooted.
-
-User context: feeling "${mood}" at ${timeLabel(timeOfDay)}.
-
-Content items:
-${list}
-
-For each item, optionally write:
-- enhancedTitle: a warmer, more personal title (max 6 words). Skip if the original is already good.
-- microCopy: one short line (max 8 words) explaining why this fits right now.
-
-Rules:
-- Only include fields where you genuinely improve the original
-- Never use generic phrases like "Find Your Peace" or "Take a Moment"
-- Match the mood — "${mood}" should be felt in the tone
-- Return ONLY valid JSON, no markdown:
-
-[
-  { "id": "...", "enhancedTitle": "...", "microCopy": "..." },
-  ...
-]`
-}
-
-async function callOpenRouter(apiKey, prompt, siteUrl) {
-  const res = await fetch(OPENROUTER_URL, {
-    method:  'POST',
-    headers: {
-      'Content-Type':  'application/json',
-      Authorization:   `Bearer ${apiKey}`,
-      'HTTP-Referer':  siteUrl,
-      'X-Title':       'Rooted',
-    },
-    body: JSON.stringify({
-      model:       MODEL,
-      messages:    [{ role: 'user', content: prompt }],
-      max_tokens:  350,
-      temperature: 0.6,
-    }),
-  })
-
-  if (!res.ok) throw new Error(`OpenRouter ${res.status}`)
-
-  const data = await res.json()
-  const text = data?.choices?.[0]?.message?.content?.trim() || ''
-
-  // Strip markdown fences if present
-  const json = text.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim()
-  return JSON.parse(json)
-}
-
 exports.handler = async function (event) {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed' }) }
   }
 
+  // ── Parse body ──────────────────────────────────────────────────────────────
   let mood, timeOfDay, items
   try {
     ;({ mood, timeOfDay, items } = JSON.parse(event.body || '{}'))
@@ -89,13 +22,7 @@ exports.handler = async function (event) {
     return { statusCode: 400, body: JSON.stringify({ error: 'Invalid JSON' }) }
   }
 
-  // Validate and clamp inputs
-  if (!Array.isArray(items) || items.length === 0) {
-    return { statusCode: 200, headers: { 'Content-Type': 'application/json' },
-             body: JSON.stringify({ enhancements: [] }) }
-  }
-
-  const safeItems = items
+  const safeItems = (Array.isArray(items) ? items : [])
     .filter(i => i && typeof i.id === 'string' && typeof i.title === 'string')
     .slice(0, 5)
 
@@ -103,49 +30,136 @@ exports.handler = async function (event) {
   const safeTime = ['morning','afternoon','evening','night'].includes(timeOfDay)
     ? timeOfDay : 'afternoon'
 
+  // ── Debug state — accumulated throughout the handler ────────────────────────
+  const debug = {
+    hasApiKey:            false,
+    apiKeyPrefix:         null,     // first 8 chars only — enough to confirm correct key
+    attemptedOpenRouter:  false,
+    openRouterStatus:     null,
+    openRouterOk:         null,
+    rawResponseLength:    null,
+    parseSucceeded:       null,
+    reason:               null,
+  }
+
+  // ── Check API key ────────────────────────────────────────────────────────────
   const apiKey  = process.env.OPENROUTER_API_KEY
   const siteUrl = process.env.URL || 'https://rooted.app'
 
-  // No API key — return empty so frontend uses originals
+  debug.hasApiKey = !!apiKey
+  if (apiKey) debug.apiKeyPrefix = apiKey.slice(0, 8) + '…'
+
+  console.log('[ai-enhance] hasApiKey:', debug.hasApiKey, '| prefix:', debug.apiKeyPrefix)
+
   if (!apiKey) {
-    return { statusCode: 200, headers: { 'Content-Type': 'application/json' },
-             body: JSON.stringify({ enhancements: [], fallback: true }) }
+    debug.reason = 'OPENROUTER_API_KEY env var is missing or empty'
+    console.log('[ai-enhance] fallback reason:', debug.reason)
+    return respond([], true, debug)
   }
 
-  const prompt = buildPrompt(safeMood, safeTime, safeItems)
+  if (safeItems.length === 0) {
+    debug.reason = 'no valid items in request body'
+    return respond([], true, debug)
+  }
 
+  // ── Build minimal prompt ─────────────────────────────────────────────────────
+  const itemList = safeItems.map(i => `${i.id}: "${i.title}"`).join('\n')
+  const prompt =
+`User is feeling "${safeMood}" (${safeTime}).
+For each item below, return a JSON array with optional enhancedTitle (max 5 words) and microCopy (max 8 words).
+Return ONLY a JSON array, no markdown.
+
+Items:
+${itemList}
+
+Example output:
+[{"id":"abc","enhancedTitle":"Feel the calm","microCopy":"Steady breath, steady mind."}]`
+
+  // ── Call OpenRouter ──────────────────────────────────────────────────────────
+  debug.attemptedOpenRouter = true
+  console.log('[ai-enhance] calling OpenRouter, model:', MODEL, '| url:', OPENROUTER_URL)
+
+  let rawText = ''
   try {
-    const parsed = await Promise.race([
-      callOpenRouter(apiKey, prompt, siteUrl),
+    const fetchPromise = fetch(OPENROUTER_URL, {
+      method:  'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        Authorization:   `Bearer ${apiKey}`,
+        'HTTP-Referer':  siteUrl,
+        'X-Title':       'Rooted',
+      },
+      body: JSON.stringify({
+        model:       MODEL,
+        messages:    [{ role: 'user', content: prompt }],
+        max_tokens:  250,
+        temperature: 0.5,
+      }),
+    })
+
+    const res = await Promise.race([
+      fetchPromise,
       new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), TIMEOUT_MS)),
     ])
 
-    if (!Array.isArray(parsed)) throw new Error('Non-array response')
+    debug.openRouterStatus = res.status
+    debug.openRouterOk     = res.ok
+    console.log('[ai-enhance] OpenRouter response status:', res.status, res.ok ? 'OK' : 'FAILED')
 
-    // Validate: only keep entries with IDs that were actually sent
-    const validIds = new Set(safeItems.map(i => i.id))
+    if (!res.ok) {
+      const errBody = await res.text()
+      console.log('[ai-enhance] OpenRouter error body:', errBody.slice(0, 300))
+      debug.reason = `OpenRouter returned HTTP ${res.status}`
+      return respond([], true, debug)
+    }
+
+    const data = await res.json()
+    rawText = data?.choices?.[0]?.message?.content?.trim() || ''
+    debug.rawResponseLength = rawText.length
+    console.log('[ai-enhance] raw response length:', rawText.length)
+    console.log('[ai-enhance] raw response preview:', rawText.slice(0, 200))
+
+    if (!rawText) {
+      debug.reason = 'OpenRouter returned empty content'
+      return respond([], true, debug)
+    }
+
+    // Strip markdown fences
+    const json = rawText.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim()
+    const parsed = JSON.parse(json)
+    debug.parseSucceeded = true
+    console.log('[ai-enhance] parse succeeded, items:', parsed.length)
+
+    if (!Array.isArray(parsed)) throw new Error('not an array')
+
+    const validIds    = new Set(safeItems.map(i => i.id))
     const enhancements = parsed
       .filter(e => e?.id && validIds.has(e.id))
       .map(e => ({
         id: e.id,
-        ...(e.enhancedTitle && typeof e.enhancedTitle === 'string'
-          ? { enhancedTitle: e.enhancedTitle.trim() } : {}),
-        ...(e.microCopy && typeof e.microCopy === 'string'
-          ? { microCopy: e.microCopy.trim() } : {}),
+        ...(e.enhancedTitle ? { enhancedTitle: String(e.enhancedTitle).trim() } : {}),
+        ...(e.microCopy     ? { microCopy:     String(e.microCopy).trim()     } : {}),
       }))
 
-    return {
-      statusCode: 200,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ enhancements }),
-    }
+    console.log('[ai-enhance] success, returning', enhancements.length, 'enhancements')
+    return respond(enhancements, false, debug)
+
   } catch (err) {
-    // Any failure — return empty so the UI renders original content unchanged
-    console.warn('ai-enhance-content: failed —', err.message)
-    return {
-      statusCode: 200,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ enhancements: [], fallback: true }),
-    }
+    debug.parseSucceeded = debug.parseSucceeded ?? false
+    debug.reason = err.message
+    console.log('[ai-enhance] caught error:', err.message)
+    console.log('[ai-enhance] raw text at failure:', rawText.slice(0, 300))
+    return respond([], true, debug)
+  }
+}
+
+function respond(enhancements, fallback, debug) {
+  const body = { enhancements }
+  if (fallback) body.fallback = true
+  body.debug = debug          // always include debug for now — remove after diagnosis
+  return {
+    statusCode: 200,
+    headers:    { 'Content-Type': 'application/json' },
+    body:       JSON.stringify(body),
   }
 }
