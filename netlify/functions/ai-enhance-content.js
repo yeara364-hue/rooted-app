@@ -6,7 +6,7 @@
  */
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
-const MODEL          = 'mistralai/mistral-7b-instruct:free'
+const MODEL          = 'meta-llama/llama-3.2-3b-instruct:free'  // current free tier model
 const TIMEOUT_MS     = 5000
 
 exports.handler = async function (event) {

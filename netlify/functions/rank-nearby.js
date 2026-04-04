@@ -103,7 +103,7 @@ Never invent items. Only use indices from the list above.`
       'X-Title': 'Rooted',
     },
     body: JSON.stringify({
-      model: 'mistralai/mistral-7b-instruct:free',
+      model: 'meta-llama/llama-3.2-3b-instruct:free',
       messages: [{ role: 'user', content: prompt }],
       max_tokens: 300,
     }),
